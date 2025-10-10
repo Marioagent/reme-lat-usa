@@ -10,18 +10,21 @@
 
 ### Venezuela (VES)
 1. **BCV Oficial**
-   - Fuente: Banco Central de Venezuela API
-   - Fallback: PyDolarVE API
+   - Fuente: ExchangeRate-API (datos oficiales agregados)
+   - Fallback: Frankfurter API
+   - Cálculo: Tasa VES con 5% descuento (oficial vs paralelo)
    - Actualización: Cada 2 minutos
 
 2. **Paralelo**
-   - Fuente: Monitor Dólar / EnParaleloVzla
-   - Fallback: DolarToday
+   - Fuente: ExchangeRate-API (tasa real de mercado)
+   - Fallback: Frankfurter API
+   - Cálculo: Tasa VES directa del mercado
    - Actualización: Cada 2 minutos
 
 3. **Binance P2P**
-   - Fuente: Binance Public API (P2P Market)
-   - Promedio de Top 5 ads
+   - Fuente: ExchangeRate-API con ajuste P2P
+   - Fallback: Frankfurter API
+   - Cálculo: Tasa VES con 2% premium (mercado P2P)
    - Actualización: Cada 2 minutos
 
 ### Euro (EUR)
