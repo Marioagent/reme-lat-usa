@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { REMITTANCE_SERVICES, SERVICE_TYPES, DELIVERY_SPEEDS, SORT_OPTIONS, COUNTRIES } from "@/lib/constants";
+import { getAffiliateLink, trackAffiliateClick, AFFILIATE_LINKS } from "@/lib/affiliates";
 import { ExternalLink, Filter, ArrowUpDown, Star, Clock, CreditCard, MapPin } from "lucide-react";
 
 export default function ComparatorNew() {
@@ -354,11 +355,12 @@ export default function ComparatorNew() {
                     <strong>Límites:</strong> ${service.minAmount.toLocaleString()} - ${service.maxAmount.toLocaleString()}
                   </div>
 
-                  {/* Botón CTA */}
+                  {/* Botón CTA con Link de Afiliado */}
                   <a
-                    href={service.url}
+                    href={getAffiliateLink(service.id, selectedCountry)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackAffiliateClick(service.id, amount)}
                     className={`w-full text-white py-3 px-4 rounded-lg hover:opacity-90 transition flex items-center justify-center gap-2 font-bold ${
                       service.recommended
                         ? "bg-green-600 hover:bg-green-700"
@@ -369,9 +371,16 @@ export default function ComparatorNew() {
                         : "bg-gray-700 hover:bg-gray-800"
                     }`}
                   >
-                    Ir a {service.name}
+                    {AFFILIATE_LINKS[service.id]?.hasProgram ? "✨ " : ""}Ir a {service.name}
                     <ExternalLink size={16} />
                   </a>
+
+                  {/* Badge de Afiliado */}
+                  {AFFILIATE_LINKS[service.id]?.hasProgram && (
+                    <p className="text-xs text-center mt-2 text-gray-500">
+                      💡 Al usar este link nos ayudas sin costo extra
+                    </p>
+                  )}
                 </motion.div>
               );
             })}
@@ -385,6 +394,11 @@ export default function ComparatorNew() {
             <p className="text-xs" style={{ color: '#000000' }}>
               Los datos mostrados son referenciales. Las tasas y comisiones pueden variar según el monto,
               método de pago y país. Verifica siempre en el sitio oficial del proveedor antes de realizar tu transacción.
+            </p>
+            <p className="text-xs mt-3" style={{ color: '#000000' }}>
+              💡 <strong>Transparencia:</strong> Algunos enlaces son afiliados, lo que significa que podemos recibir
+              una comisión si realizas un envío. Esto no tiene costo extra para ti y nos ayuda a mantener este
+              servicio gratuito y actualizado. Nuestra comparación es imparcial y basada en datos reales.
             </p>
             <p className="text-xs mt-2 font-semibold" style={{ color: '#000000' }}>
               Última actualización: {new Date().toLocaleString('es-ES')}
