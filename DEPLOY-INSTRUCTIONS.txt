@@ -1,0 +1,40 @@
+==============================================
+🚀 DEPLOY A VERCEL - EJECUTA ESTOS COMANDOS
+==============================================
+
+PASO 1: Ve al directorio del proyecto
+--------------------------------------
+cd /home/usermario/reme-lat-usa-pro
+
+
+PASO 2: Login en Vercel
+------------------------
+npx vercel login
+
+(Se abrirá tu navegador o te dará un link)
+(Selecciona tu método: Email, GitHub, etc.)
+(Confirma el login)
+
+
+PASO 3: Deploy a Producción
+----------------------------
+npx vercel --prod
+
+Preguntas que te hará:
+- Set up and deploy? → Presiona ENTER (Yes)
+- Which scope? → Presiona ENTER (tu cuenta)
+- Link to existing project? → Presiona ENTER (No)
+- Project name? → Presiona ENTER (reme-lat-usa-pro)
+- Directory? → Presiona ENTER (./)
+- Override settings? → Presiona ENTER (No)
+
+
+RESULTADO:
+----------
+Al final verás algo como:
+
+✅ Production: https://reme-lat-usa-pro-xxxxx.vercel.app
+
+¡ESA ES TU URL DE LA PWA!
+
+==============================================
