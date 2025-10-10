@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import RegisterServiceWorker from "./register-sw";
-import Analytics from "@/components/Analytics";
+import AnalyticsWrapper from "@/components/AnalyticsWrapper";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://reme-lat-usa.vercel.app";
 
@@ -98,7 +98,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <RegisterServiceWorker />
-        <Analytics />
+        <AnalyticsWrapper />
         {children}
       </body>
     </html>
