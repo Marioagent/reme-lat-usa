@@ -1,23 +1,112 @@
+// Real-Time Exchange Rate Client
+// This client fetches REAL rates from our Next.js API routes
+// NO MOCKS - NO DEMOS - ONLY REAL DATA
+
 import axios from "axios";
 import { ExchangeRate } from "@/types";
 
-const EXCHANGE_API_BASE = "https://api.exchangerate-api.com/v4/latest";
-const BINANCE_API_BASE = "https://api.binance.com/api/v3";
+const API_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 
 export class ExchangeAPIClient {
   /**
-   * Obtiene tasas de cambio desde Exchange Rate API
+   * Get all real-time rates from our API
+   * This includes Venezuela rates, Euro, and all country rates
+   */
+  static async getAllRates(): Promise<any> {
+    try {
+      const response = await axios.get(`${API_BASE}/api/rates`);
+      if (response.data.success) {
+        return response.data.data;
+      }
+      throw new Error('Failed to fetch rates');
+    } catch (error) {
+      console.error("Error fetching all rates:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get only Venezuela rates (BCV, Paralelo, Binance P2P)
+   * All rates are fetched in real-time from actual sources
+   */
+  static async getVenezuelaRates(): Promise<{
+    bcv: number;
+    paralelo: number;
+    binanceP2P: number;
+  }> {
+    try {
+      const response = await axios.get(`${API_BASE}/api/rates/venezuela`);
+      if (response.data.success) {
+        return {
+          bcv: response.data.data.bcv.rate,
+          paralelo: response.data.data.paralelo.rate,
+          binanceP2P: response.data.data.binanceP2P.rate,
+        };
+      }
+      throw new Error('Failed to fetch Venezuela rates');
+    } catch (error) {
+      console.error("Error fetching Venezuela rates:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get BCV Official Rate - REAL from Banco Central de Venezuela
+   */
+  static async getBCVRate(): Promise<number> {
+    try {
+      const rates = await this.getVenezuelaRates();
+      return rates.bcv;
+    } catch (error) {
+      console.error("Error fetching BCV rate:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get Paralelo Rate - REAL from Monitor Dólar / EnParaleloVzla
+   */
+  static async getParaleloRate(): Promise<number> {
+    try {
+      const rates = await this.getVenezuelaRates();
+      return rates.paralelo;
+    } catch (error) {
+      console.error("Error fetching Paralelo rate:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get Binance P2P Rate - REAL from Binance Public API
+   */
+  static async getBinanceP2PRate(fiat: string = "VES"): Promise<number> {
+    try {
+      if (fiat === "VES") {
+        const rates = await this.getVenezuelaRates();
+        return rates.binanceP2P;
+      }
+      // For other currencies, use the general rates endpoint
+      const allRates = await this.getAllRates();
+      return allRates.countries[fiat] || 0;
+    } catch (error) {
+      console.error("Error fetching Binance rate:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get exchange rates for multiple countries - REAL from ExchangeRate-API
    */
   static async getExchangeRates(baseCurrency: string = "USD"): Promise<ExchangeRate[]> {
     try {
-      const response = await axios.get(`${EXCHANGE_API_BASE}/${baseCurrency}`);
-      const rates = response.data.rates;
+      const allRates = await this.getAllRates();
+      const rates = allRates.countries;
 
       return Object.entries(rates).map(([currency, rate]) => ({
         currency,
         rate: rate as number,
         source: "ExchangeRateAPI",
-        timestamp: new Date(response.data.date),
+        timestamp: new Date(allRates.timestamp),
       }));
     } catch (error) {
       console.error("Error fetching exchange rates:", error);
@@ -26,53 +115,40 @@ export class ExchangeAPIClient {
   }
 
   /**
-   * Obtiene tasa de Binance P2P (simulada por ahora)
+   * Get Euro to USD rate - REAL from European Central Bank / ExchangeRate-API
    */
-  static async getBinanceP2PRate(fiat: string = "VES"): Promise<number> {
+  static async getEuroRate(): Promise<number> {
     try {
-      // API de Binance requiere autenticación para P2P
-      // Por ahora retornamos tasas estimadas basadas en mercado
-      const rates: Record<string, number> = {
-        VES: 51.25,
-        COP: 4200,
-        ARS: 1050,
-        BRL: 5.2,
-        PEN: 3.75,
-        CLP: 950,
-      };
-
-      return rates[fiat] || 1;
+      const allRates = await this.getAllRates();
+      return allRates.euro;
     } catch (error) {
-      console.error("Error fetching Binance rate:", error);
-      return 0;
+      console.error("Error fetching Euro rate:", error);
+      throw error;
     }
   }
 
   /**
-   * Obtiene tasa BCV oficial de Venezuela
+   * Force refresh all rates (bypass cache)
    */
-  static async getBCVRate(): Promise<number> {
+  static async refreshRates(): Promise<any> {
     try {
-      // API del BCV (si está disponible)
-      // Por ahora retornamos tasa fija
-      return 38.45;
+      const response = await axios.get(`${API_BASE}/api/rates?refresh=true`);
+      if (response.data.success) {
+        return response.data.data;
+      }
+      throw new Error('Failed to refresh rates');
     } catch (error) {
-      console.error("Error fetching BCV rate:", error);
-      return 38.45;
+      console.error("Error refreshing rates:", error);
+      throw error;
     }
   }
+}
 
-  /**
-   * Obtiene tasa paralelo de Venezuela
-   */
-  static async getParaleloRate(): Promise<number> {
-    try {
-      // API de DolarToday o Monitor Dólar
-      // Por ahora retornamos tasa simulada
-      return 52.8 + (Math.random() - 0.5) * 0.5;
-    } catch (error) {
-      console.error("Error fetching paralelo rate:", error);
-      return 52.8;
-    }
-  }
+// Export a simpler interface for hooks
+export async function useRealTimeRates() {
+  return await ExchangeAPIClient.getAllRates();
+}
+
+export async function useVenezuelaRates() {
+  return await ExchangeAPIClient.getVenezuelaRates();
 }
