@@ -13,23 +13,23 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-3xl">💧</span>
-            <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              REME LAT-USA
+            <span className="font-bold text-xl" style={{ color: '#000000' }}>
+              REME-LAT-USA
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-6">
-            <a href="#inicio" className="text-gray-700 hover:text-blue-600 font-medium transition">
+            <a href="#inicio" className="font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Inicio
             </a>
-            <a href="#calculadora" className="text-gray-700 hover:text-blue-600 font-medium transition">
+            <a href="#calculadora" className="font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Calculadora
             </a>
-            <a href="#comparador" className="text-gray-700 hover:text-blue-600 font-medium transition">
+            <a href="#comparador" className="font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Comparador
             </a>
-            <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition">
+            <Link href="/dashboard" className="font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Dashboard
             </Link>
           </div>
@@ -55,16 +55,16 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden py-4 space-y-2">
-            <a href="#inicio" className="block py-2 text-gray-700 hover:text-blue-600 font-medium transition">
+            <a href="#inicio" className="block py-2 font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Inicio
             </a>
-            <a href="#calculadora" className="block py-2 text-gray-700 hover:text-blue-600 font-medium transition">
+            <a href="#calculadora" className="block py-2 font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Calculadora
             </a>
-            <a href="#comparador" className="block py-2 text-gray-700 hover:text-blue-600 font-medium transition">
+            <a href="#comparador" className="block py-2 font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Comparador
             </a>
-            <Link href="/dashboard" className="block py-2 text-gray-700 hover:text-blue-600 font-medium transition">
+            <Link href="/dashboard" className="block py-2 font-medium transition hover:opacity-70" style={{ color: '#000000' }}>
               Dashboard
             </Link>
             <Link

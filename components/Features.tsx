@@ -25,7 +25,9 @@ export default function Features() {
   return (
     <section className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-4xl font-bold text-center mb-12">¿Por qué REME LAT-USA?</h2>
+        <h2 className="text-4xl font-bold text-center mb-12" style={{ color: '#000000' }}>
+          ¿Por qué REME-LAT-USA?
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => {
@@ -44,8 +46,12 @@ export default function Features() {
                     <Icon size={32} className="text-white" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-xl font-bold mb-2" style={{ color: '#000000' }}>
+                  {feature.title}
+                </h3>
+                <p style={{ color: '#000000' }}>
+                  {feature.description}
+                </p>
               </motion.div>
             );
           })}

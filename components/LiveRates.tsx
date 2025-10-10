@@ -99,9 +99,9 @@ export default function LiveRates() {
       {/* Header with refresh button */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Tasas en Vivo</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#000000' }}>Tasas en Vivo</h2>
           {lastUpdate && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm" style={{ color: '#000000' }}>
               Última actualización: {lastUpdate.toLocaleTimeString('es-ES')}
             </p>
           )}
@@ -138,17 +138,17 @@ export default function LiveRates() {
                 EN VIVO
               </span>
             </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">{rate.title}</h3>
-            <p className={`text-3xl font-bold ${rate.color} mb-2`}>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: '#000000' }}>{rate.title}</h3>
+            <p className="text-3xl font-bold mb-2" style={{ color: '#000000' }}>
               {rate.rate.toFixed(2)} Bs
             </p>
-            <p className="text-xs text-gray-600 mb-1">{rate.description}</p>
-            <p className="text-xs text-gray-500 italic">Fuente: {rate.source}</p>
+            <p className="text-xs mb-1" style={{ color: '#000000' }}>{rate.description}</p>
+            <p className="text-xs italic" style={{ color: '#000000' }}>Fuente: {rate.source}</p>
           </motion.div>
         ))}
       </div>
 
-      <div className="mt-4 text-center text-xs text-gray-500">
+      <div className="mt-4 text-center text-xs" style={{ color: '#000000' }}>
         📊 Datos reales obtenidos de fuentes oficiales • Actualización automática cada 2 minutos
       </div>
     </div>
