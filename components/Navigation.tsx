@@ -11,13 +11,13 @@ export default function Navigation() {
     <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-3xl">💧</span>
-            <div className="flex flex-col">
-              <span className="font-bold text-xl leading-tight" style={{ color: '#000000' }}>
+          <Link href="/" className="flex items-center gap-3">
+            <span className="text-4xl">💧</span>
+            <div className="flex flex-col gap-0">
+              <span className="font-bold text-xl leading-none" style={{ color: '#000000' }}>
                 REME-LAT-USA
               </span>
-              <span className="text-sm font-semibold leading-tight" style={{ color: '#3B82F6' }}>
+              <span className="text-base font-bold leading-none mt-1" style={{ color: '#3B82F6' }}>
                 Mac
               </span>
             </div>
