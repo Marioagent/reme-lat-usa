@@ -1,10 +1,25 @@
+import dynamic from 'next/dynamic';
 import Navigation from "@/components/Navigation";
 import HeroNew from "@/components/HeroNew";
-import LiveRates from "@/components/LiveRates";
-import CalculatorNew from "@/components/CalculatorNew";
-import ComparatorNew from "@/components/ComparatorNew";
-import Features from "@/components/Features";
-import Footer from "@/components/Footer";
+
+// Lazy load components for better performance
+const LiveRates = dynamic(() => import("@/components/LiveRates"), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-100 rounded-xl"></div>,
+});
+
+const CalculatorNew = dynamic(() => import("@/components/CalculatorNew"), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-100 rounded-xl"></div>,
+});
+
+const ComparatorNew = dynamic(() => import("@/components/ComparatorNew"), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-100 rounded-xl"></div>,
+});
+
+const Features = dynamic(() => import("@/components/Features"), {
+  loading: () => <div className="h-64 animate-pulse bg-gray-100 rounded-xl"></div>,
+});
+
+const Footer = dynamic(() => import("@/components/Footer"));
 
 export default function Home() {
   return (

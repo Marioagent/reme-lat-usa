@@ -1,38 +1,42 @@
 import { NextResponse } from 'next/server';
-import { getBCVRate, getParaleloRate, getBinanceP2PRate } from '@/lib/exchange-api';
+import { getVenezuelaRatesValidated } from '@/lib/bcv-api';
 
 // API Route: /api/rates/venezuela
-// Returns only Venezuela-specific rates
+// Returns Venezuela-specific rates with official sources and validation
 
 export const runtime = 'edge';
 export const revalidate = 120;
 
 export async function GET() {
   try {
-    // Fetch Venezuela rates in parallel
-    const [bcv, paralelo, binanceP2P] = await Promise.all([
-      getBCVRate(),
-      getParaleloRate(),
-      getBinanceP2PRate(),
-    ]);
+    // Fetch Venezuela rates with validation
+    const rates = await getVenezuelaRatesValidated();
 
     return NextResponse.json({
       success: true,
       data: {
         bcv: {
-          rate: bcv,
+          rate: rates.bcv.rate,
           name: 'BCV Oficial',
-          source: 'Banco Central de Venezuela',
+          source: rates.bcv.source,
+          confidence: rates.bcv.confidence,
         },
         paralelo: {
-          rate: paralelo,
+          rate: rates.paralelo.rate,
           name: 'Paralelo',
-          source: 'Monitor Dólar / EnParaleloVzla',
+          source: rates.paralelo.source,
+          confidence: rates.paralelo.confidence,
         },
         binanceP2P: {
-          rate: binanceP2P,
+          rate: rates.binanceP2P.rate,
           name: 'Binance P2P',
-          source: 'Binance Public API',
+          source: rates.binanceP2P.source,
+          confidence: rates.binanceP2P.confidence,
+        },
+        validation: {
+          bcvParaleloDiff: rates.validation.bcvParaleloDiff,
+          binanceParaleloDiff: rates.validation.binanceParaleloDiff,
+          alert: rates.validation.alert,
         },
         timestamp: Date.now(),
         currency: 'VES',
