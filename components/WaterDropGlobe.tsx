@@ -1,14 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 export default function WaterDropGlobe() {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 1, ease: "easeOut" }}
-      className="fixed top-20 right-2 sm:right-4 md:right-6 z-40 pointer-events-none"
+    <div
+      className="fixed top-20 right-2 sm:right-4 md:right-6 z-40 pointer-events-none animate-float"
       style={{
         filter: "drop-shadow(0 10px 30px rgba(59, 130, 246, 0.5))",
       }}
@@ -18,7 +13,7 @@ export default function WaterDropGlobe() {
         height="140"
         viewBox="0 0 180 200"
         xmlns="http://www.w3.org/2000/svg"
-        className="animate-float sm:w-[150px] sm:h-[170px] md:w-[180px] md:h-[200px]"
+        className="sm:w-[150px] sm:h-[170px] md:w-[180px] md:h-[200px]"
       >
         <defs>
           {/* Gradiente de agua */}
@@ -131,6 +126,6 @@ export default function WaterDropGlobe() {
           clipPath="url(#dropClip)"
         />
       </svg>
-    </motion.div>
+    </div>
   );
 }
