@@ -13,9 +13,14 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-3xl">💧</span>
-            <span className="font-bold text-xl" style={{ color: '#000000' }}>
-              REME-LAT-USA
-            </span>
+            <div className="flex flex-col">
+              <span className="font-bold text-xl leading-tight" style={{ color: '#000000' }}>
+                REME-LAT-USA
+              </span>
+              <span className="text-sm font-semibold leading-tight" style={{ color: '#3B82F6' }}>
+                Mac
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
