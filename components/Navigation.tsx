@@ -46,7 +46,8 @@ export default function Navigation() {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-gray-700 hover:text-blue-600"
+            className="md:hidden hover:text-blue-600"
+            style={{ color: '#000000' }}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>

@@ -42,14 +42,14 @@ export default function Comparator() {
               >
                 <div className="text-center mb-4">
                   <div className="text-4xl mb-2">{service.icon}</div>
-                  <h3 className="text-xl font-bold">{service.name}</h3>
+                  <h3 className="text-xl font-bold" style={{ color: '#000000' }}>{service.name}</h3>
                   {service.recommended && (
                     <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full inline-block mt-1">
                       RECOMENDADO
                     </span>
                   )}
                 </div>
-                <div className="space-y-2 text-sm mb-4">
+                <div className="space-y-2 text-sm mb-4" style={{ color: '#000000' }}>
                   <p>
                     <span className="font-semibold">Comisión:</span> {service.commission}%
                   </p>

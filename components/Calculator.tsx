@@ -3,7 +3,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { COUNTRIES } from "@/lib/constants";
-import { Calculator as CalcIcon } from "lucide-react";
+import { Calculator as CalcIcon, RefreshCw } from "lucide-react";
+import { ExchangeAPIClient } from "@/lib/api-client";
+
+interface RealTimeRates {
+  venezuela: {
+    bcv: number;
+    paralelo: number;
+    binanceP2P: number;
+  };
+  countries: Record<string, number>;
+}
 
 export default function Calculator() {
   const [amount, setAmount] = useState<number>(100);
@@ -11,25 +21,79 @@ export default function Calculator() {
   const [rateType, setRateType] = useState<string>("paralelo");
   const [result, setResult] = useState<number>(0);
   const [showResult, setShowResult] = useState<boolean>(false);
+  const [realRates, setRealRates] = useState<RealTimeRates | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const rates: Record<string, Record<string, number>> = {
-    VE: { bcv: 38.45, paralelo: 52.80, binance: 51.25 },
-    CO: { bcv: 4200, paralelo: 4250, binance: 4230 },
-    AR: { bcv: 1050, paralelo: 1080, binance: 1070 },
-    BR: { bcv: 5.2, paralelo: 5.3, binance: 5.25 },
-    PE: { bcv: 3.75, paralelo: 3.78, binance: 3.76 },
-    CL: { bcv: 950, paralelo: 960, binance: 955 },
-    EC: { bcv: 1, paralelo: 1, binance: 1 },
+  // Fetch real-time rates on component mount
+  useEffect(() => {
+    fetchRates();
+    // Auto-refresh every 2 minutes
+    const interval = setInterval(fetchRates, 120000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchRates = async () => {
+    try {
+      setError(null);
+      const data = await ExchangeAPIClient.getAllRates();
+      setRealRates(data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching rates:', err);
+      setError('Error al cargar tasas. Reintentando...');
+      setLoading(false);
+    }
   };
 
   const handleCalculate = () => {
-    const rate = rates[country]?.[rateType] || 0;
+    if (!realRates) {
+      setError('No hay tasas disponibles. Intenta refrescar.');
+      return;
+    }
+
+    let rate = 0;
+
+    // For Venezuela, use specific rates (bcv, paralelo, binance)
+    if (country === 'VE') {
+      if (rateType === 'bcv') {
+        rate = realRates.venezuela.bcv;
+      } else if (rateType === 'paralelo') {
+        rate = realRates.venezuela.paralelo;
+      } else if (rateType === 'binance') {
+        rate = realRates.venezuela.binanceP2P;
+      }
+    } else {
+      // For other countries, use the country rate from API
+      const selectedCountry = COUNTRIES.find(c => c.code === country);
+      if (selectedCountry) {
+        rate = realRates.countries[selectedCountry.currency] || 0;
+      }
+    }
+
     const calculated = amount * rate;
     setResult(calculated);
     setShowResult(true);
   };
 
   const selectedCountry = COUNTRIES.find(c => c.code === country);
+
+  // Get the current rate for display
+  const getCurrentRate = (): number => {
+    if (!realRates) return 0;
+
+    if (country === 'VE') {
+      if (rateType === 'bcv') return realRates.venezuela.bcv;
+      if (rateType === 'paralelo') return realRates.venezuela.paralelo;
+      if (rateType === 'binance') return realRates.venezuela.binanceP2P;
+    } else {
+      const selectedCountry = COUNTRIES.find(c => c.code === country);
+      if (selectedCountry) {
+        return realRates.countries[selectedCountry.currency] || 0;
+      }
+    }
+    return 0;
+  };
 
   return (
     <section id="calculadora" className="bg-white py-20">
@@ -39,9 +103,27 @@ export default function Calculator() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-            💱 Calculadora de Remesas
-          </h2>
+          <div className="flex justify-between items-center mb-12">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+              💱 Calculadora de Remesas
+            </h2>
+            {realRates && (
+              <button
+                onClick={fetchRates}
+                disabled={loading}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                Actualizar
+              </button>
+            )}
+          </div>
+
+          {error && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+              ⚠️ {error}
+            </div>
+          )}
 
           <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl shadow-xl p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -101,13 +183,34 @@ export default function Calculator() {
 
             <button
               onClick={handleCalculate}
-              className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 rounded-lg font-bold text-lg hover:shadow-xl transition flex items-center justify-center gap-2"
+              disabled={loading || !realRates}
+              className={`w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 rounded-lg font-bold text-lg hover:shadow-xl transition flex items-center justify-center gap-2 ${
+                loading || !realRates ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               <CalcIcon size={20} />
-              Calcular Remesa
+              {loading ? 'Cargando tasas...' : 'Calcular Remesa'}
             </button>
 
-            {showResult && (
+            {/* Loading skeleton */}
+            {loading && (
+              <div className="mt-6 p-6 bg-white rounded-lg shadow-lg animate-pulse">
+                <div className="text-center">
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-4"></div>
+                  <div className="h-12 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                </div>
+              </div>
+            )}
+
+            {/* Real-time rate indicator */}
+            {!loading && realRates && (
+              <div className="mt-4 text-center text-sm" style={{ color: '#000000' }}>
+                ⚡ Tasa en tiempo real: <strong>{getCurrentRate().toFixed(2)}</strong> {selectedCountry?.currency}/USD
+              </div>
+            )}
+
+            {showResult && !loading && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -122,9 +225,12 @@ export default function Calculator() {
                     })}{" "}
                     {selectedCountry?.currency}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {amount} USD × {rates[country]?.[rateType]} {selectedCountry?.currency}/USD = {result.toFixed(2)}{" "}
+                  <p className="text-sm" style={{ color: '#000000' }}>
+                    {amount} USD × {getCurrentRate().toFixed(2)} {selectedCountry?.currency}/USD = {result.toFixed(2)}{" "}
                     {selectedCountry?.currency}
+                  </p>
+                  <p className="text-xs mt-2 text-gray-500">
+                    📊 Tasa real obtenida de fuentes oficiales
                   </p>
                 </div>
               </motion.div>

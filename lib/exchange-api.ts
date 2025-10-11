@@ -110,14 +110,16 @@ export async function getEuroRate(): Promise<number> {
 // ============================================
 
 /**
- * Get real exchange rates for multiple countries
+ * Get real exchange rates for ALL Latin American countries
  * Source: ExchangeRate-API
+ * Updated: Now includes all 22 LAT country currencies
  */
 export async function getMultiCountryRates(): Promise<Record<string, number>> {
   try {
     const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
 
     return {
+      // América del Sur
       ARS: parseFloat(response.data.rates.ARS), // Argentina Peso
       BOB: parseFloat(response.data.rates.BOB), // Bolivia Boliviano
       BRL: parseFloat(response.data.rates.BRL), // Brazil Real
@@ -126,6 +128,23 @@ export async function getMultiCountryRates(): Promise<Record<string, number>> {
       PEN: parseFloat(response.data.rates.PEN), // Peru Sol
       UYU: parseFloat(response.data.rates.UYU), // Uruguay Peso
       PYG: parseFloat(response.data.rates.PYG), // Paraguay Guarani
+      VES: parseFloat(response.data.rates.VES), // Venezuela Bolívar
+
+      // América Central (NUEVAS - agregadas en optimización)
+      MXN: parseFloat(response.data.rates.MXN), // México Peso
+      GTQ: parseFloat(response.data.rates.GTQ), // Guatemala Quetzal
+      HNL: parseFloat(response.data.rates.HNL), // Honduras Lempira
+      NIO: parseFloat(response.data.rates.NIO), // Nicaragua Córdoba
+      CRC: parseFloat(response.data.rates.CRC), // Costa Rica Colón
+      PAB: parseFloat(response.data.rates.PAB), // Panamá Balboa
+
+      // Caribe (NUEVAS - agregadas en optimización)
+      DOP: parseFloat(response.data.rates.DOP), // República Dominicana Peso
+      CUP: parseFloat(response.data.rates.CUP), // Cuba Peso
+      HTG: parseFloat(response.data.rates.HTG), // Haití Gourde
+
+      // Otras monedas importantes
+      USD: 1.0, // US Dollar (base)
       EUR: parseFloat(response.data.rates.EUR), // Euro
     };
   } catch (error) {
