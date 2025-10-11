@@ -131,21 +131,6 @@ export default function WaterDropGlobe() {
           clipPath="url(#dropClip)"
         />
       </svg>
-
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-15px) rotate(2deg);
-          }
-        }
-
-        .animate-float {
-          animation: float 4s ease-in-out infinite;
-        }
-      `}</style>
     </motion.div>
   );
 }
