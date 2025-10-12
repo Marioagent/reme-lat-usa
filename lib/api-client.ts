@@ -11,6 +11,7 @@ export class ExchangeAPIClient {
   /**
    * Get all real-time rates from our API
    * This includes Venezuela rates, Euro, and all country rates
+   * ALWAYS returns data - uses fallback rates if APIs are unavailable (weekends/holidays)
    */
   static async getAllRates(): Promise<any> {
     try {
@@ -20,8 +21,49 @@ export class ExchangeAPIClient {
       }
       throw new Error('Failed to fetch rates');
     } catch (error) {
-      console.error("Error fetching all rates:", error);
-      throw error;
+      console.error("Error fetching all rates (using fallback):", error);
+
+      // FALLBACK RATES - para cuando las APIs no responden (domingos, festivos)
+      // Estas son tasas estimadas actualizadas manualmente
+      return {
+        venezuela: {
+          bcv: 36.50,        // BCV oficial (estimado)
+          paralelo: 38.50,   // Paralelo market (estimado)
+          binanceP2P: 38.20, // Binance P2P (estimado)
+        },
+        euro: 1.08,
+        countries: {
+          // América del Sur
+          VES: 38.50,   // Venezuela (paralelo)
+          ARS: 850.00,  // Argentina
+          BOB: 6.91,    // Bolivia
+          BRL: 5.10,    // Brasil
+          CLP: 950.00,  // Chile
+          COP: 4200.00, // Colombia
+          PEN: 3.75,    // Perú
+          UYU: 39.50,   // Uruguay
+          PYG: 7300.00, // Paraguay
+
+          // América Central
+          MXN: 17.50,   // México
+          GTQ: 7.75,    // Guatemala
+          HNL: 24.70,   // Honduras
+          NIO: 36.80,   // Nicaragua
+          CRC: 520.00,  // Costa Rica
+          PAB: 1.00,    // Panamá
+
+          // Caribe
+          DOP: 58.50,   // República Dominicana
+          CUP: 24.00,   // Cuba
+          HTG: 132.00,  // Haití
+
+          // Otras
+          USD: 1.0,
+          EUR: 0.93,
+        },
+        timestamp: Date.now(),
+        _fallback: true, // Flag to indicate these are fallback rates
+      };
     }
   }
 
