@@ -28,7 +28,7 @@ export default function HeroNew() {
           REME-LAT-USA
         </motion.h1>
 
-        {/* Nombre Mac en azul prominente */}
+        {/* Nombre MGA en azul prominente */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -36,7 +36,7 @@ export default function HeroNew() {
           className="mb-6"
         >
           <p className="text-2xl font-bold" style={{ color: '#3B82F6' }}>
-            by Mac
+            by MGA
           </p>
         </motion.div>
 

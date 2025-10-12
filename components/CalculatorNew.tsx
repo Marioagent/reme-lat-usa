@@ -53,7 +53,10 @@ export default function CalculatorNew() {
   };
 
   const getRateForCountry = (countryCode: string): number => {
-    if (!realRates) return 0;
+    if (!realRates) {
+      console.warn('getRateForCountry: realRates is null');
+      return 0;
+    }
 
     // Mapeo de códigos de país a códigos de moneda
     const currencyMap: Record<string, string> = {
@@ -80,9 +83,19 @@ export default function CalculatorNew() {
     const currency = currencyMap[countryCode];
     if (!currency) return 1; // USD o países con USD
 
-    // Para Venezuela usamos el paralelo
-    if (countryCode === 'VE' && realRates.venezuela) {
-      return realRates.venezuela.paralelo;
+    // Para Venezuela usamos el paralelo (prioritario)
+    if (countryCode === 'VE') {
+      if (realRates.venezuela && realRates.venezuela.paralelo) {
+        console.log(`VE rate (paralelo): ${realRates.venezuela.paralelo}`);
+        return realRates.venezuela.paralelo;
+      }
+      // Fallback a countries.VES si venezuela.paralelo no está disponible
+      if (realRates.countries && realRates.countries.VES) {
+        console.log(`VE rate (countries fallback): ${realRates.countries.VES}`);
+        return realRates.countries.VES;
+      }
+      console.warn('VE rate not found in realRates');
+      return 0;
     }
 
     // Para otros países usamos el exchange rate
@@ -90,6 +103,7 @@ export default function CalculatorNew() {
       return realRates.countries[currency];
     }
 
+    console.warn(`Rate not found for ${countryCode} (${currency})`);
     return 1;
   };
 

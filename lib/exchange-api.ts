@@ -200,6 +200,10 @@ export async function getAllRealTimeRates(): Promise<AllRates> {
       getMultiCountryRates(),
     ]);
 
+    // IMPORTANTE: Usar tasa de paralelo para VES en countries
+    // Esto asegura que el calculador use la tasa correcta de Venezuela
+    countries.VES = paralelo;
+
     return {
       venezuela: {
         bcv,
