@@ -22,7 +22,7 @@ const nextConfig = {
 
   // Experimental optimizations
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled - causes critters module error in Vercel
     optimizePackageImports: [
       'lucide-react',
       'framer-motion',
