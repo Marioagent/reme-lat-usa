@@ -115,27 +115,51 @@ export default function CalculatorNew() {
         await loadRealRates();
       }
 
+      // Validar que amount sea mayor que 0
+      if (amount <= 0) {
+        console.warn('Amount must be greater than 0');
+        setLoading(false);
+        return;
+      }
+
       const fromRate = getRateForCountry(fromCountry);
       const toRate = getRateForCountry(toCountry);
+
+      console.log(`Calculating: ${amount} ${fromCountry} → ${toCountry}`);
+      console.log(`From rate: ${fromRate}, To rate: ${toRate}`);
+
+      // Validar que las tasas sean válidas
+      if (fromRate === 0 || toRate === 0) {
+        console.error('Invalid rates: fromRate or toRate is 0');
+        alert('Error: No se pudieron obtener las tasas de cambio. Por favor, actualiza las tasas.');
+        setLoading(false);
+        return;
+      }
 
       let calculated = 0;
 
       if (fromCountry === "US") {
         // Desde USD a otra moneda
         calculated = amount * toRate;
+        console.log(`USD to ${toCountry}: ${amount} * ${toRate} = ${calculated}`);
       } else if (toCountry === "US") {
         // Desde otra moneda a USD
         calculated = amount / fromRate;
+        console.log(`${fromCountry} to USD: ${amount} / ${fromRate} = ${calculated}`);
       } else {
         // Entre dos monedas no-USD
         const usdAmount = amount / fromRate;
         calculated = usdAmount * toRate;
+        console.log(`${fromCountry} to ${toCountry}: ${amount} / ${fromRate} * ${toRate} = ${calculated}`);
       }
+
+      console.log(`Final result: ${calculated}`);
 
       setResult(calculated);
       setShowResult(true);
     } catch (error) {
       console.error('Error calculating:', error);
+      alert('Error al calcular. Por favor, intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -291,20 +315,27 @@ export default function CalculatorNew() {
                   <label className="block text-sm font-medium mb-2" style={{ color: '#000000' }}>
                     Monto a Enviar ({fromCountryData?.currency})
                   </label>
-                  <input
-                    type="number"
-                    value={amount === 0 ? '' : amount}
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                      setAmount(value);
-                      setShowResult(false);
-                    }}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
-                    placeholder="100.00"
-                    min="0"
-                    step="0.01"
-                    style={{ color: '#000000' }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={amount === 0 ? '' : amount.toString()}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, '');
+                        const parsed = value === '' ? 0 : parseFloat(value);
+                        setAmount(isNaN(parsed) ? 0 : parsed);
+                        setShowResult(false);
+                      }}
+                      onFocus={(e) => {
+                        if (amount === 0) {
+                          e.target.value = '';
+                        }
+                      }}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
+                      placeholder="0.00"
+                      style={{ color: '#000000', backgroundColor: '#FFFFFF' }}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex gap-3">
@@ -334,20 +365,27 @@ export default function CalculatorNew() {
                   <label className="block text-sm font-medium mb-2" style={{ color: '#000000' }}>
                     Cantidad que quiero que reciban ({toCountryData?.currency})
                   </label>
-                  <input
-                    type="number"
-                    value={targetAmount === 0 ? '' : targetAmount}
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                      setTargetAmount(value);
-                      setShowResult(false);
-                    }}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
-                    placeholder="5000.00"
-                    min="0"
-                    step="0.01"
-                    style={{ color: '#000000' }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={targetAmount === 0 ? '' : targetAmount.toString()}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, '');
+                        const parsed = value === '' ? 0 : parseFloat(value);
+                        setTargetAmount(isNaN(parsed) ? 0 : parsed);
+                        setShowResult(false);
+                      }}
+                      onFocus={(e) => {
+                        if (targetAmount === 0) {
+                          e.target.value = '';
+                        }
+                      }}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
+                      placeholder="0.00"
+                      style={{ color: '#000000', backgroundColor: '#FFFFFF' }}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex gap-3">
