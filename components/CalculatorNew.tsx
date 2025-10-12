@@ -38,6 +38,13 @@ export default function CalculatorNew() {
     setShowResult(false);
   };
 
+  const handleReset = () => {
+    setAmount(0);
+    setTargetAmount(0);
+    setResult(0);
+    setShowResult(false);
+  };
+
   const getRateForCountry = (countryCode: string): number => {
     if (!realRates) return 0;
 
@@ -273,18 +280,28 @@ export default function CalculatorNew() {
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
                     placeholder="100"
                     min="0"
+                    step="0.01"
                     style={{ color: '#000000' }}
                   />
                 </div>
 
-                <button
-                  onClick={handleCalculate}
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 rounded-lg font-bold text-lg hover:shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <CalcIcon size={20} />
-                  {loading ? 'Calculando...' : 'Calcular Remesa'}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCalculate}
+                    disabled={loading}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 rounded-lg font-bold text-lg hover:shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <CalcIcon size={20} />
+                    {loading ? 'Calculando...' : 'Calcular Remesa'}
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold text-lg transition"
+                    title="Limpiar campos"
+                  >
+                    <RefreshCw size={20} />
+                  </button>
+                </div>
               </>
             )}
 
@@ -305,18 +322,28 @@ export default function CalculatorNew() {
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
                     placeholder="5000"
                     min="0"
+                    step="0.01"
                     style={{ color: '#000000' }}
                   />
                 </div>
 
-                <button
-                  onClick={handleInverseCalculate}
-                  disabled={loading || !realRates}
-                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <CalcIcon size={20} />
-                  Calcular Cuánto Enviar
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleInverseCalculate}
+                    disabled={loading || !realRates}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <CalcIcon size={20} />
+                    Calcular Cuánto Enviar
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold text-lg transition"
+                    title="Limpiar campos"
+                  >
+                    <RefreshCw size={20} />
+                  </button>
+                </div>
               </>
             )}
 

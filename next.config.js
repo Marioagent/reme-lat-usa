@@ -3,6 +3,8 @@ const nextConfig = {
   // React optimizations
   reactStrictMode: true,
   swcMinify: true,
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
 
   // Image optimization
   images: {
@@ -31,6 +33,8 @@ const nextConfig = {
       '@radix-ui/react-tabs',
       'recharts',
       'axios',
+      'react',
+      'react-dom',
     ],
   },
 
