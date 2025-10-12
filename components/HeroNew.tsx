@@ -28,6 +28,18 @@ export default function HeroNew() {
           REME-LAT-USA
         </motion.h1>
 
+        {/* Nombre Mac en azul prominente */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6"
+        >
+          <p className="text-2xl font-bold" style={{ color: '#3B82F6' }}>
+            by Mac
+          </p>
+        </motion.div>
+
         <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

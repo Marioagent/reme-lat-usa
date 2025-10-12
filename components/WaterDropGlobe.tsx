@@ -3,17 +3,17 @@
 export default function WaterDropGlobe() {
   return (
     <div
-      className="fixed top-20 right-2 sm:right-4 md:right-6 z-40 pointer-events-none animate-float"
+      className="fixed top-24 right-4 sm:right-8 md:right-12 z-50 pointer-events-none animate-float"
       style={{
-        filter: "drop-shadow(0 10px 30px rgba(59, 130, 246, 0.5))",
+        filter: "drop-shadow(0 10px 30px rgba(59, 130, 246, 0.8))",
       }}
     >
       <svg
-        width="120"
-        height="140"
+        width="150"
+        height="170"
         viewBox="0 0 180 200"
         xmlns="http://www.w3.org/2000/svg"
-        className="sm:w-[150px] sm:h-[170px] md:w-[180px] md:h-[200px]"
+        className="sm:w-[180px] sm:h-[200px] md:w-[220px] md:h-[250px]"
       >
         <defs>
           {/* Gradiente de agua */}
