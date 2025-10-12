@@ -3,7 +3,6 @@ import "./globals.css";
 import RegisterServiceWorker from "./register-sw";
 import AnalyticsWrapper from "@/components/AnalyticsWrapper";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import WaterDropGlobe from "@/components/WaterDropGlobe";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://reme-lat-usa.vercel.app";
 
@@ -157,7 +156,6 @@ export default function RootLayout({
         <RegisterServiceWorker />
         <GoogleAnalytics />
         <AnalyticsWrapper />
-        <WaterDropGlobe />
         {children}
       </body>
     </html>
