@@ -9,16 +9,23 @@ import { ExchangeAPIClient } from "@/lib/api-client";
 export default function CalculatorNew() {
   const [fromCountry, setFromCountry] = useState<string>("US");
   const [toCountry, setToCountry] = useState<string>("VE");
-  const [amount, setAmount] = useState<number>(100);
+  const [amount, setAmount] = useState<number>(0);
   const [result, setResult] = useState<number>(0);
   const [showResult, setShowResult] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [realRates, setRealRates] = useState<any>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  // Obtener tasas reales
+  // Obtener tasas reales y actualizar cada 2 minutos
   useEffect(() => {
     loadRealRates();
+
+    // Auto-refresh cada 2 minutos (120000ms)
+    const interval = setInterval(() => {
+      loadRealRates();
+    }, 120000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadRealRates = async () => {
@@ -272,13 +279,14 @@ export default function CalculatorNew() {
                   </label>
                   <input
                     type="number"
-                    value={amount}
+                    value={amount === 0 ? '' : amount}
                     onChange={(e) => {
-                      setAmount(parseFloat(e.target.value) || 0);
+                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                      setAmount(value);
                       setShowResult(false);
                     }}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
-                    placeholder="100"
+                    placeholder="100.00"
                     min="0"
                     step="0.01"
                     style={{ color: '#000000' }}
@@ -314,13 +322,14 @@ export default function CalculatorNew() {
                   </label>
                   <input
                     type="number"
-                    value={targetAmount}
+                    value={targetAmount === 0 ? '' : targetAmount}
                     onChange={(e) => {
-                      setTargetAmount(parseFloat(e.target.value) || 0);
+                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                      setTargetAmount(value);
                       setShowResult(false);
                     }}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-semibold"
-                    placeholder="5000"
+                    placeholder="5000.00"
                     min="0"
                     step="0.01"
                     style={{ color: '#000000' }}

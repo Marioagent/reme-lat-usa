@@ -19,7 +19,7 @@ export default function Navigation() {
                 REME-LAT-USA
               </span>
               <span className="text-base font-bold leading-none mt-1" style={{ color: '#3B82F6' }}>
-                Mac
+                MGA
               </span>
             </div>
           </Link>
