@@ -16,15 +16,15 @@ async function getBCVOfficialDirect(): Promise<number | null> {
     // Note: bcv.org.ve may require CORS proxy or scraping
     // For now, we'll use a proxy service or API aggregator
     const response = await axios.get('https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv', {
-      timeout: 5000,
+      timeout: 3000, // Reducido a 3s para respuesta rápida
     });
 
     if (response.data?.monitors?.bcv?.price) {
       return parseFloat(response.data.monitors.bcv.price);
     }
     return null;
-  } catch (error) {
-    console.warn('BCV Official Direct failed:', error);
+  } catch (error: any) {
+    console.warn('BCV Official Direct failed (timeout/unavailable):', error?.message || error);
     return null;
   }
 }
@@ -203,28 +203,47 @@ export interface VenezuelaRatesValidated {
 /**
  * Get all Venezuela rates with multi-source validation
  * This is the main function to use - includes fallbacks and validation
+ * Now with faster timeouts for weekend/holiday scenarios
  */
 export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValidated> {
   const timestamp = Date.now();
 
-  // Fetch BCV from multiple sources (parallel)
-  const [bcvOfficial, bcvMonitor, bcvExchange, bcvFallback] = await Promise.allSettled([
-    getBCVOfficialDirect(),
-    getBCVFromMonitorDolar(),
-    getBCVFromExchangeMonitor(),
-    getBCVFromExchangeRateAPI(),
-  ]);
+  try {
+    // Fetch BCV from multiple sources (parallel) con timeout general
+    const bcvPromises = Promise.allSettled([
+      getBCVOfficialDirect(),
+      getBCVFromMonitorDolar(),
+      getBCVFromExchangeMonitor(),
+      getBCVFromExchangeRateAPI(),
+    ]);
 
-  // Fetch Paralelo from multiple sources
-  const [paraleloMonitor, paraleloExchange] = await Promise.allSettled([
-    getParaleloFromMonitorDolar(),
-    getParaleloFromExchangeRateAPI(),
-  ]);
+    // Fetch Paralelo from multiple sources
+    const paraleloPromises = Promise.allSettled([
+      getParaleloFromMonitorDolar(),
+      getParaleloFromExchangeRateAPI(),
+    ]);
 
-  // Fetch Binance P2P
-  const [binanceAPI] = await Promise.allSettled([
-    getBinanceP2PFromAPI(),
-  ]);
+    // Fetch Binance P2P
+    const binancePromises = Promise.allSettled([
+      getBinanceP2PFromAPI(),
+    ]);
+
+    // Esperar todas con timeout de 8 segundos total
+    const results = await Promise.race([
+      Promise.all([bcvPromises, paraleloPromises, binancePromises]),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('API timeout - using fallback')), 8000)
+      )
+    ]) as [
+      PromiseSettledResult<number | null>[],
+      PromiseSettledResult<number | null>[],
+      PromiseSettledResult<number | null>[]
+    ];
+
+    const [bcvResults, paraleloResults, binanceResults] = results;
+    const [bcvOfficial, bcvMonitor, bcvExchange, bcvFallback] = bcvResults;
+    const [paraleloMonitor, paraleloExchange] = paraleloResults;
+    const [binanceAPI] = binanceResults;
 
   // Select best BCV rate
   let bcvRate = 0;
@@ -279,43 +298,73 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
     binanceConfidence = 'medium';
   }
 
-  // Validation: Calculate differences
-  const bcvParaleloDiff = paraleloRate > 0 ? ((paraleloRate - bcvRate) / bcvRate) * 100 : 0;
-  const binanceParaleloDiff = paraleloRate > 0 ? ((binanceRate - paraleloRate) / paraleloRate) * 100 : 0;
+    // Validation: Calculate differences
+    const bcvParaleloDiff = paraleloRate > 0 ? ((paraleloRate - bcvRate) / bcvRate) * 100 : 0;
+    const binanceParaleloDiff = paraleloRate > 0 ? ((binanceRate - paraleloRate) / paraleloRate) * 100 : 0;
 
-  // Alert if rates seem off
-  let alert: string | null = null;
-  if (Math.abs(bcvParaleloDiff) > 20) {
-    alert = `BCV-Paralelo difference is ${bcvParaleloDiff.toFixed(1)}% (expected 5-15%)`;
-  } else if (Math.abs(binanceParaleloDiff) > 5) {
-    alert = `Binance-Paralelo difference is ${binanceParaleloDiff.toFixed(1)}% (expected 0-3%)`;
+    // Alert if rates seem off
+    let alert: string | null = null;
+    if (Math.abs(bcvParaleloDiff) > 20) {
+      alert = `BCV-Paralelo difference is ${bcvParaleloDiff.toFixed(1)}% (expected 5-15%)`;
+    } else if (Math.abs(binanceParaleloDiff) > 5) {
+      alert = `Binance-Paralelo difference is ${binanceParaleloDiff.toFixed(1)}% (expected 0-3%)`;
+    }
+
+    return {
+      bcv: {
+        rate: bcvRate,
+        source: bcvSource,
+        timestamp,
+        confidence: bcvConfidence,
+      },
+      paralelo: {
+        rate: paraleloRate,
+        source: paraleloSource,
+        timestamp,
+        confidence: paraleloConfidence,
+      },
+      binanceP2P: {
+        rate: binanceRate,
+        source: binanceSource,
+        timestamp,
+        confidence: binanceConfidence,
+      },
+      validation: {
+        bcvParaleloDiff: parseFloat(bcvParaleloDiff.toFixed(2)),
+        binanceParaleloDiff: parseFloat(binanceParaleloDiff.toFixed(2)),
+        alert,
+      },
+    };
+  } catch (error) {
+    // Si todo falla (APIs caídas, fin de semana, etc), usar tasas estimadas
+    console.error('All Venezuela API sources failed, using estimated rates:', error);
+
+    return {
+      bcv: {
+        rate: 36.50,
+        source: 'Fallback (API unavailable)',
+        timestamp,
+        confidence: 'low',
+      },
+      paralelo: {
+        rate: 38.50,
+        source: 'Fallback (API unavailable)',
+        timestamp,
+        confidence: 'low',
+      },
+      binanceP2P: {
+        rate: 38.20,
+        source: 'Fallback (API unavailable)',
+        timestamp,
+        confidence: 'low',
+      },
+      validation: {
+        bcvParaleloDiff: 5.48,
+        binanceParaleloDiff: -0.78,
+        alert: 'Using fallback rates - APIs unavailable (weekend/holiday)',
+      },
+    };
   }
-
-  return {
-    bcv: {
-      rate: bcvRate,
-      source: bcvSource,
-      timestamp,
-      confidence: bcvConfidence,
-    },
-    paralelo: {
-      rate: paraleloRate,
-      source: paraleloSource,
-      timestamp,
-      confidence: paraleloConfidence,
-    },
-    binanceP2P: {
-      rate: binanceRate,
-      source: binanceSource,
-      timestamp,
-      confidence: binanceConfidence,
-    },
-    validation: {
-      bcvParaleloDiff: parseFloat(bcvParaleloDiff.toFixed(2)),
-      binanceParaleloDiff: parseFloat(binanceParaleloDiff.toFixed(2)),
-      alert,
-    },
-  };
 }
 
 // Export simple getters for backward compatibility

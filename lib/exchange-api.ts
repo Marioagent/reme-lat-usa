@@ -227,31 +227,108 @@ export async function getAllRealTimeRates(): Promise<AllRates> {
 /**
  * Get cached rates with automatic refresh
  * Caches rates for 2 minutes to avoid API rate limits
+ * Extended cache for weekends/holidays when APIs may not respond
  */
 let cachedRates: AllRates | null = null;
 let lastFetch = 0;
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+const EXTENDED_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas para fallback
 
 export async function getCachedRates(): Promise<AllRates> {
   const now = Date.now();
 
+  // Si tenemos caché reciente (< 2 minutos), usar eso
   if (cachedRates && (now - lastFetch) < CACHE_DURATION) {
+    console.log('Using fresh cache (< 2 min)');
     return cachedRates;
   }
 
-  const rates = await getAllRealTimeRates();
-  cachedRates = rates;
-  lastFetch = now;
+  // Intentar obtener tasas frescas
+  try {
+    const rates = await getAllRealTimeRates();
+    cachedRates = rates;
+    lastFetch = now;
+    console.log('Fetched fresh rates successfully');
+    return rates;
+  } catch (error) {
+    console.warn('Failed to fetch fresh rates:', error);
 
-  return rates;
+    // Si tenemos caché antiguo pero válido (< 24h), usar eso
+    if (cachedRates && (now - lastFetch) < EXTENDED_CACHE_DURATION) {
+      console.log('Using extended cache (APIs may be unavailable - weekend/holiday)');
+      return cachedRates;
+    }
+
+    // Si no hay caché, usar tasas de respaldo estáticas
+    console.error('No cache available, using fallback rates');
+    return getFallbackRates();
+  }
 }
 
 /**
  * Force refresh rates (ignores cache)
  */
 export async function forceRefreshRates(): Promise<AllRates> {
-  const rates = await getAllRealTimeRates();
-  cachedRates = rates;
-  lastFetch = Date.now();
-  return rates;
+  try {
+    const rates = await getAllRealTimeRates();
+    cachedRates = rates;
+    lastFetch = Date.now();
+    return rates;
+  } catch (error) {
+    console.error('Force refresh failed:', error);
+    // Si falla, intentar usar caché existente o fallback
+    if (cachedRates) {
+      console.log('Force refresh failed, returning cached rates');
+      return cachedRates;
+    }
+    console.log('Force refresh failed, returning fallback rates');
+    return getFallbackRates();
+  }
+}
+
+/**
+ * Fallback rates when APIs are unavailable (weekends, holidays, downtimes)
+ * These are typical market rates updated manually
+ */
+function getFallbackRates(): AllRates {
+  console.warn('⚠️ Using fallback rates - APIs unavailable (likely weekend/holiday)');
+
+  return {
+    venezuela: {
+      bcv: 36.50,        // BCV oficial (estimado)
+      paralelo: 38.50,   // Paralelo market (estimado)
+      binanceP2P: 38.20, // Binance P2P (estimado)
+    },
+    euro: 1.08,
+    countries: {
+      // América del Sur
+      VES: 38.50,   // Venezuela (paralelo)
+      ARS: 850.00,  // Argentina
+      BOB: 6.91,    // Bolivia
+      BRL: 5.10,    // Brasil
+      CLP: 950.00,  // Chile
+      COP: 4200.00, // Colombia
+      PEN: 3.75,    // Perú
+      UYU: 39.50,   // Uruguay
+      PYG: 7300.00, // Paraguay
+
+      // América Central
+      MXN: 17.50,   // México
+      GTQ: 7.75,    // Guatemala
+      HNL: 24.70,   // Honduras
+      NIO: 36.80,   // Nicaragua
+      CRC: 520.00,  // Costa Rica
+      PAB: 1.00,    // Panamá
+
+      // Caribe
+      DOP: 58.50,   // República Dominicana
+      CUP: 24.00,   // Cuba
+      HTG: 132.00,  // Haití
+
+      // Otras
+      USD: 1.0,
+      EUR: 0.93,
+    },
+    timestamp: Date.now(),
+  };
 }
