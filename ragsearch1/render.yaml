@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: ragsearch1-api
+    env: python
+    region: oregon
+    plan: free
+    branch: master
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: CHROMA_PERSIST_DIR
+        value: /opt/render/project/src/data/chromadb
+    healthCheckPath: /health

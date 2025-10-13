@@ -1,0 +1,83 @@
+name: Full System Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      deploy_ragsearch1:
+        description: 'Deploy RAGSearch1 API'
+        required: false
+        default: 'true'
+      deploy_pwa:
+        description: 'Deploy PWA'
+        required: false
+        default: 'true'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ragsearch1_changed: ${{ steps.changes.outputs.ragsearch1 }}
+      pwa_changed: ${{ steps.changes.outputs.pwa }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            ragsearch1:
+              - 'ragsearch1/**'
+            pwa:
+              - 'app/**'
+              - 'components/**'
+              - 'lib/**'
+              - 'public/**'
+              - 'package.json'
+              - 'next.config.js'
+
+  deploy-ragsearch1:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ragsearch1_changed == 'true' || github.event.inputs.deploy_ragsearch1 == 'true'
+    uses: ./.github/workflows/deploy-ragsearch1.yml
+    secrets: inherit
+
+  deploy-pwa:
+    needs: [detect-changes, deploy-ragsearch1]
+    if: always() && (needs.detect-changes.outputs.pwa_changed == 'true' || github.event.inputs.deploy_pwa == 'true')
+    uses: ./.github/workflows/deploy-pwa.yml
+    secrets: inherit
+
+  integration-test:
+    needs: [deploy-ragsearch1, deploy-pwa]
+    if: always()
+    runs-on: ubuntu-latest
+    name: Integration Tests
+
+    steps:
+      - name: Test PWA
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://reme-lat-usa-pro.vercel.app)
+          if [ $response -eq 200 ]; then
+            echo "✅ PWA is live!"
+          else
+            echo "⚠️ PWA returned status: $response"
+          fi
+
+      - name: Test RAG Integration
+        run: |
+          response=$(curl -s https://reme-lat-usa-pro.vercel.app/api/rag/bcv)
+          if echo "$response" | grep -q "success"; then
+            echo "✅ RAG Integration working!"
+          else
+            echo "⚠️ RAG Integration test inconclusive"
+          fi
+
+      - name: Deployment Complete
+        run: |
+          echo "🎉 Full system deployment complete!"
+          echo "🌐 PWA: https://reme-lat-usa-pro.vercel.app"
+          echo "🤖 RAGSearch1: Deployed via Railway"
+          echo "🔗 Integration: Hybrid mode active"

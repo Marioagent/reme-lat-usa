@@ -1,0 +1,59 @@
+name: Deploy RAGSearch1 API
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'ragsearch1/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-railway:
+    runs-on: ubuntu-latest
+    name: Deploy to Railway
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        working-directory: ./ragsearch1
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service ragsearch1-api
+
+      - name: Deployment Summary
+        run: |
+          echo "✅ RAGSearch1 API deployed successfully!"
+          echo "🤖 Service: ragsearch1-api"
+
+  health-check:
+    needs: deploy-railway
+    runs-on: ubuntu-latest
+    name: Health Check
+
+    steps:
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Check API Health
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.RAGSEARCH1_URL }}/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ API is healthy!"
+          else
+            echo "❌ API health check failed with status: $response"
+            exit 1
+          fi
