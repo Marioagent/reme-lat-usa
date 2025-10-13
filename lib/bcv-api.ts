@@ -1,26 +1,60 @@
 // BCV Official Rate API - Direct Sources
 // Real Venezuelan Bolívar exchange rates from official and trusted sources
 
-import axios from 'axios';
+// Note: Using native fetch for Edge Runtime compatibility (no axios)
 
 // ============================================
 // BCV OFFICIAL RATE - MULTIPLE SOURCES
 // ============================================
 
 /**
- * PRIMARY: BCV Official Rate from bcv.org.ve
+ * PRIMARY: DolarAPI Venezuela - Most Reliable
+ * Source: https://ve.dolarapi.com - Official BCV rates
+ */
+async function getBCVFromDolarAPI(): Promise<number | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch('https://ve.dolarapi.com/v1/dolares', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    // Find "oficial" source (BCV)
+    const oficial = data?.find((item: any) => item.fuente === 'oficial');
+    if (oficial?.promedio) {
+      return parseFloat(oficial.promedio);
+    }
+    return null;
+  } catch (error: any) {
+    console.warn('DolarAPI Venezuela BCV failed:', error?.message || error);
+    return null;
+  }
+}
+
+/**
+ * SECONDARY: BCV Official Rate from bcv.org.ve
  * This attempts to fetch the official rate directly from Banco Central de Venezuela
  */
 async function getBCVOfficialDirect(): Promise<number | null> {
   try {
-    // Note: bcv.org.ve may require CORS proxy or scraping
-    // For now, we'll use a proxy service or API aggregator
-    const response = await axios.get('https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv', {
-      timeout: 3000, // Reducido a 3s para respuesta rápida
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-    if (response.data?.monitors?.bcv?.price) {
-      return parseFloat(response.data.monitors.bcv.price);
+    const response = await fetch('https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    if (data?.monitors?.bcv?.price) {
+      return parseFloat(data.monitors.bcv.price);
     }
     return null;
   } catch (error: any) {
@@ -35,12 +69,19 @@ async function getBCVOfficialDirect(): Promise<number | null> {
  */
 async function getBCVFromMonitorDolar(): Promise<number | null> {
   try {
-    const response = await axios.get('https://pydolarvenezuela-api.vercel.app/api/v1/dollar', {
-      timeout: 5000,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (response.data?.monitors?.bcv?.price) {
-      return parseFloat(response.data.monitors.bcv.price);
+    const response = await fetch('https://pydolarvenezuela-api.vercel.app/api/v1/dollar', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    if (data?.monitors?.bcv?.price) {
+      return parseFloat(data.monitors.bcv.price);
     }
     return null;
   } catch (error) {
@@ -55,13 +96,19 @@ async function getBCVFromMonitorDolar(): Promise<number | null> {
  */
 async function getBCVFromExchangeMonitor(): Promise<number | null> {
   try {
-    // Using pydolarvenezuela as it's more reliable
-    const response = await axios.get('https://api.exchangemonitor.net/v1/rates/bcv', {
-      timeout: 5000,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (response.data?.rate) {
-      return parseFloat(response.data.rate);
+    const response = await fetch('https://api.exchangemonitor.net/v1/rates/bcv', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    if (data?.rate) {
+      return parseFloat(data.rate);
     }
     return null;
   } catch (error) {
@@ -76,12 +123,19 @@ async function getBCVFromExchangeMonitor(): Promise<number | null> {
  */
 async function getBCVFromExchangeRateAPI(): Promise<number | null> {
   try {
-    const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD', {
-      timeout: 5000,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (response.data?.rates?.VES) {
-      const vesRate = parseFloat(response.data.rates.VES);
+    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    if (data?.rates?.VES) {
+      const vesRate = parseFloat(data.rates.VES);
       // BCV is typically 5-10% below parallel rate
       return parseFloat((vesRate * 0.93).toFixed(2));
     }
@@ -97,20 +151,56 @@ async function getBCVFromExchangeRateAPI(): Promise<number | null> {
 // ============================================
 
 /**
- * PRIMARY: Monitor Dólar Venezuela - Paralelo Rate
+ * PRIMARY: DolarAPI Venezuela - Paralelo Rate
+ * Source: https://ve.dolarapi.com - Market parallel rates
+ */
+async function getParaleloFromDolarAPI(): Promise<number | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch('https://ve.dolarapi.com/v1/dolares', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    // Find "paralelo" source
+    const paralelo = data?.find((item: any) => item.fuente === 'paralelo');
+    if (paralelo?.promedio) {
+      return parseFloat(paralelo.promedio);
+    }
+    return null;
+  } catch (error) {
+    console.warn('DolarAPI Venezuela Paralelo failed:', error);
+    return null;
+  }
+}
+
+/**
+ * SECONDARY: Monitor Dólar Venezuela - Paralelo Rate
  */
 async function getParaleloFromMonitorDolar(): Promise<number | null> {
   try {
-    const response = await axios.get('https://pydolarvenezuela-api.vercel.app/api/v1/dollar', {
-      timeout: 5000,
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch('https://pydolarvenezuela-api.vercel.app/api/v1/dollar', {
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
 
     // Try multiple parallel market sources
     const sources = ['enparalelovzla', 'paralelo', 'dolartoday'];
 
     for (const source of sources) {
-      if (response.data?.monitors?.[source]?.price) {
-        return parseFloat(response.data.monitors[source].price);
+      if (data?.monitors?.[source]?.price) {
+        return parseFloat(data.monitors[source].price);
       }
     }
     return null;
@@ -125,12 +215,19 @@ async function getParaleloFromMonitorDolar(): Promise<number | null> {
  */
 async function getParaleloFromExchangeRateAPI(): Promise<number | null> {
   try {
-    const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD', {
-      timeout: 5000,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (response.data?.rates?.VES) {
-      return parseFloat(response.data.rates.VES);
+    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    if (data?.rates?.VES) {
+      return parseFloat(data.rates.VES);
     }
     return null;
   } catch (error) {
@@ -148,12 +245,19 @@ async function getParaleloFromExchangeRateAPI(): Promise<number | null> {
  */
 async function getBinanceP2PFromAPI(): Promise<number | null> {
   try {
-    const response = await axios.get('https://pydolarvenezuela-api.vercel.app/api/v1/dollar', {
-      timeout: 5000,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (response.data?.monitors?.binance?.price) {
-      return parseFloat(response.data.monitors.binance.price);
+    const response = await fetch('https://pydolarvenezuela-api.vercel.app/api/v1/dollar', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    if (data?.monitors?.binance?.price) {
+      return parseFloat(data.monitors.binance.price);
     }
     return null;
   } catch (error) {
@@ -211,6 +315,7 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
   try {
     // Fetch BCV from multiple sources (parallel) con timeout general
     const bcvPromises = Promise.allSettled([
+      getBCVFromDolarAPI(),           // NEW: DolarAPI first (most reliable)
       getBCVOfficialDirect(),
       getBCVFromMonitorDolar(),
       getBCVFromExchangeMonitor(),
@@ -219,6 +324,7 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
 
     // Fetch Paralelo from multiple sources
     const paraleloPromises = Promise.allSettled([
+      getParaleloFromDolarAPI(),      // NEW: DolarAPI first (most reliable)
       getParaleloFromMonitorDolar(),
       getParaleloFromExchangeRateAPI(),
     ]);
@@ -241,8 +347,8 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
     ];
 
     const [bcvResults, paraleloResults, binanceResults] = results;
-    const [bcvOfficial, bcvMonitor, bcvExchange, bcvFallback] = bcvResults;
-    const [paraleloMonitor, paraleloExchange] = paraleloResults;
+    const [bcvDolarAPI, bcvOfficial, bcvMonitor, bcvExchange, bcvFallback] = bcvResults;
+    const [paraleloDolarAPI, paraleloMonitor, paraleloExchange] = paraleloResults;
     const [binanceAPI] = binanceResults;
 
   // Select best BCV rate
@@ -250,7 +356,11 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
   let bcvSource = 'unknown';
   let bcvConfidence: 'high' | 'medium' | 'low' = 'low';
 
-  if (bcvOfficial.status === 'fulfilled' && bcvOfficial.value) {
+  if (bcvDolarAPI.status === 'fulfilled' && bcvDolarAPI.value) {
+    bcvRate = bcvDolarAPI.value;
+    bcvSource = 'DolarAPI Venezuela (BCV)';
+    bcvConfidence = 'high';
+  } else if (bcvOfficial.status === 'fulfilled' && bcvOfficial.value) {
     bcvRate = bcvOfficial.value;
     bcvSource = 'BCV Official Direct';
     bcvConfidence = 'high';
@@ -273,7 +383,11 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
   let paraleloSource = 'unknown';
   let paraleloConfidence: 'high' | 'medium' | 'low' = 'low';
 
-  if (paraleloMonitor.status === 'fulfilled' && paraleloMonitor.value) {
+  if (paraleloDolarAPI.status === 'fulfilled' && paraleloDolarAPI.value) {
+    paraleloRate = paraleloDolarAPI.value;
+    paraleloSource = 'DolarAPI Venezuela (Paralelo)';
+    paraleloConfidence = 'high';
+  } else if (paraleloMonitor.status === 'fulfilled' && paraleloMonitor.value) {
     paraleloRate = paraleloMonitor.value;
     paraleloSource = 'Monitor Dólar (Paralelo)';
     paraleloConfidence = 'high';
@@ -297,6 +411,11 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
     binanceSource = 'Calculated from Paralelo';
     binanceConfidence = 'medium';
   }
+
+    // Si todas las tasas son 0, forzar uso de fallback
+    if (bcvRate === 0 && paraleloRate === 0 && binanceRate === 0) {
+      throw new Error('All API sources returned 0 or failed - using fallback rates');
+    }
 
     // Validation: Calculate differences
     const bcvParaleloDiff = paraleloRate > 0 ? ((paraleloRate - bcvRate) / bcvRate) * 100 : 0;
@@ -339,28 +458,33 @@ export async function getVenezuelaRatesValidated(): Promise<VenezuelaRatesValida
     // Si todo falla (APIs caídas, fin de semana, etc), usar tasas estimadas
     console.error('All Venezuela API sources failed, using estimated rates:', error);
 
+    // Fallback rates actualizadas - Enero 2025
+    const bcvFallback = 195.00;    // BCV Oficial aproximado
+    const paraleloFallback = 294.00; // Paralelo aproximado
+    const binanceFallback = 270.00;  // Binance P2P entre BCV y Paralelo
+
     return {
       bcv: {
-        rate: 36.50,
-        source: 'Fallback (API unavailable)',
+        rate: bcvFallback,
+        source: 'Fallback (API unavailable - estimated Jan 2025)',
         timestamp,
         confidence: 'low',
       },
       paralelo: {
-        rate: 38.50,
-        source: 'Fallback (API unavailable)',
+        rate: paraleloFallback,
+        source: 'Fallback (API unavailable - estimated Jan 2025)',
         timestamp,
         confidence: 'low',
       },
       binanceP2P: {
-        rate: 38.20,
-        source: 'Fallback (API unavailable)',
+        rate: binanceFallback,
+        source: 'Fallback (API unavailable - estimated Jan 2025)',
         timestamp,
         confidence: 'low',
       },
       validation: {
-        bcvParaleloDiff: 5.48,
-        binanceParaleloDiff: -0.78,
+        bcvParaleloDiff: parseFloat((((paraleloFallback - bcvFallback) / bcvFallback) * 100).toFixed(2)),
+        binanceParaleloDiff: parseFloat((((binanceFallback - paraleloFallback) / paraleloFallback) * 100).toFixed(2)),
         alert: 'Using fallback rates - APIs unavailable (weekend/holiday)',
       },
     };
