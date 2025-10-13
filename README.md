@@ -268,3 +268,15 @@ Para soporte o consultas: [tu-email@ejemplo.com](mailto:tu-email@ejemplo.com)
 ---
 
 **Made with 💧 by MarioAgent**
+
+
+## 🚀 Deploy Automático Activo
+
+Sistema configurado con GitHub Actions para deployment automático.
+
+- PWA: Auto-deploy a Vercel
+- RAGSearch1: Ready para Railway
+- Integración: Sistema híbrido funcional
+
+Última actualización: 2025-10-13 12:25:08
+
