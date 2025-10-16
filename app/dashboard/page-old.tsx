@@ -14,12 +14,6 @@ import {
   DollarSign,
   Crown,
   CheckCircle,
-  Mail,
-  Lock,
-  User,
-  Eye,
-  EyeOff,
-  AlertCircle,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants";
 import Link from "next/link";
@@ -57,17 +51,6 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-
-  // Dashboard states
   const [history, setHistory] = useState<RemittanceHistoryItem[]>([]);
   const [alerts, setAlerts] = useState<RateAlert[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -89,14 +72,16 @@ function DashboardContent() {
 
   const checkUser = async () => {
     const currentUser = await auth.getUser();
-    if (currentUser) {
-      setUser(currentUser);
-      loadData(currentUser.id);
+    if (!currentUser) {
+      router.push("/auth");
+      return;
     }
-    setLoading(false);
+    setUser(currentUser);
+    loadData(currentUser.id);
   };
 
   const loadData = async (userId: string) => {
+    setLoading(true);
     const { data: historyData } = await db.getRemittanceHistory(userId);
     const { data: alertsData } = await db.getRateAlerts(userId);
     const { data: subData } = await db.getUserSubscription(userId);
@@ -104,110 +89,12 @@ function DashboardContent() {
     if (historyData) setHistory(historyData);
     if (alertsData) setAlerts(alertsData);
     if (subData) setSubscription(subData);
-  };
-
-  // Validación de email en tiempo real
-  const validateEmail = (value: string) => {
-    if (!value) {
-      setEmailError("El email es requerido");
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      setEmailError("Ingresa un email válido");
-      return false;
-    }
-    setEmailError("");
-    return true;
-  };
-
-  // Validación de password en tiempo real
-  const validatePassword = (value: string) => {
-    if (!value) {
-      setPasswordError("La contraseña es requerida");
-      return false;
-    }
-    if (value.length < 6) {
-      setPasswordError("Mínimo 6 caracteres");
-      return false;
-    }
-    setPasswordError("");
-    return true;
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
-    if (value) validateEmail(value);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPassword(value);
-    if (value) validatePassword(value);
-  };
-
-  const clearFields = () => {
-    setEmail("");
-    setPassword("");
-    setError("");
-    setSuccess("");
-    setEmailError("");
-    setPasswordError("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validar antes de enviar
-    const emailValid = validateEmail(email);
-    const passwordValid = validatePassword(password);
-
-    if (!emailValid || !passwordValid) {
-      return;
-    }
-
-    setAuthLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      if (isLogin) {
-        // LOGIN
-        const { data, error } = await auth.signIn(email, password);
-        if (error) throw error;
-
-        if (data?.user) {
-          setSuccess("¡Login exitoso! Cargando dashboard...");
-          clearFields();
-          setUser(data.user);
-          loadData(data.user.id);
-        }
-      } else {
-        // REGISTRO
-        const { data, error } = await auth.signUp(email, password);
-        if (error) throw error;
-
-        if (data?.user) {
-          setSuccess("¡Cuenta creada! Confirma tu email y luego inicia sesión.");
-          clearFields();
-          setTimeout(() => {
-            setIsLogin(true);
-          }, 3000);
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || "Error en autenticación");
-    } finally {
-      setAuthLoading(false);
-    }
+    setLoading(false);
   };
 
   const handleLogout = async () => {
     await auth.signOut();
-    setUser(null);
-    setHistory([]);
-    setAlerts([]);
-    setSubscription(null);
+    router.push("/");
   };
 
   const handleCreateAlert = async () => {
@@ -231,6 +118,14 @@ function DashboardContent() {
     if (user) loadData(user.id);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-2xl font-bold text-black">Cargando...</div>
+      </div>
+    );
+  }
+
   const getPlanName = (plan: string) => {
     const plans: Record<string, string> = {
       monthly: "Mensual",
@@ -241,185 +136,26 @@ function DashboardContent() {
     return plans[plan] || plan;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
-        <div className="text-2xl font-bold text-black">Cargando...</div>
-      </div>
-    );
-  }
-
-  // Si NO está autenticado, mostrar formulario de login
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full"
-        >
-          <div className="text-center mb-8">
-            <span className="text-6xl mb-4 block">💧</span>
-            <span className="font-bold text-3xl bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent block">
-              REME LAT-USA PRO
-            </span>
-            <h1 className="text-3xl font-bold text-black mt-6 mb-2">
-              {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
-            </h1>
-            <p className="text-black font-medium">
-              {isLogin
-                ? "Ingresa para acceder a tu dashboard"
-                : "Regístrate para comenzar"}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border-4 border-gray-300">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Input */}
-              <div>
-                <label className="block text-base font-black text-black mb-2">
-                  <Mail className="inline mr-2 text-black" size={20} />
-                  Email
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={handleEmailChange}
-                    onBlur={() => email && validateEmail(email)}
-                    className={`w-full px-4 py-4 border-4 rounded-xl text-black text-lg font-bold placeholder:text-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500 ${
-                      emailError ? 'border-red-500' : email ? 'border-green-500' : 'border-gray-400'
-                    }`}
-                    placeholder="tu@email.com"
-                    required
-                  />
-                  {email && !emailError && (
-                    <CheckCircle className="absolute right-4 top-4 text-green-500" size={24} />
-                  )}
-                </div>
-                {emailError && (
-                  <p className="text-red-600 text-sm font-bold mt-2 flex items-center">
-                    <AlertCircle className="mr-1" size={16} />
-                    {emailError}
-                  </p>
-                )}
-              </div>
-
-              {/* Password Input */}
-              <div>
-                <label className="block text-base font-black text-black mb-2">
-                  <Lock className="inline mr-2 text-black" size={20} />
-                  Contraseña
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={handlePasswordChange}
-                    onBlur={() => password && validatePassword(password)}
-                    className={`w-full px-4 py-4 pr-12 border-4 rounded-xl text-black text-lg font-bold placeholder:text-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500 ${
-                      passwordError ? 'border-red-500' : password ? 'border-green-500' : 'border-gray-400'
-                    }`}
-                    placeholder="••••••••"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-4 text-gray-600 hover:text-black"
-                  >
-                    {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-                  </button>
-                  {password && !passwordError && (
-                    <CheckCircle className="absolute right-14 top-4 text-green-500" size={24} />
-                  )}
-                </div>
-                {passwordError && (
-                  <p className="text-red-600 text-sm font-bold mt-2 flex items-center">
-                    <AlertCircle className="mr-1" size={16} />
-                    {passwordError}
-                  </p>
-                )}
-                {!passwordError && password && (
-                  <p className="text-green-600 text-sm font-bold mt-2">
-                    ✓ Contraseña válida
-                  </p>
-                )}
-              </div>
-
-              {/* Messages */}
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-50 border-4 border-red-500 text-black p-4 rounded-xl flex items-start space-x-2"
-                >
-                  <AlertCircle className="text-red-500 mt-0.5 flex-shrink-0" size={24} />
-                  <p className="text-base font-bold">{error}</p>
-                </motion.div>
-              )}
-
-              {success && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-green-50 border-4 border-green-500 text-black p-4 rounded-xl flex items-start space-x-2"
-                >
-                  <CheckCircle className="text-green-500 mt-0.5 flex-shrink-0" size={24} />
-                  <p className="text-base font-bold">{success}</p>
-                </motion.div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={authLoading || !!emailError || !!passwordError || !email || !password}
-                className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-4 text-lg rounded-xl font-black hover:shadow-2xl transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {authLoading ? "Verificando..." : isLogin ? "INGRESAR" : "CREAR CUENTA"}
-              </button>
-            </form>
-
-            {/* Toggle Login/Register */}
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  clearFields();
-                }}
-                className="text-blue-600 hover:text-blue-700 font-black text-lg"
-              >
-                {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Si SÍ está autenticado, mostrar dashboard completo
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b-2 border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <span className="text-3xl">💧</span>
               <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                 REME LAT-USA PRO
               </span>
-            </div>
+            </Link>
             <div className="flex items-center gap-4">
-              <span className="text-black font-bold text-lg">{user?.email}</span>
+              <span className="text-black font-medium">{user?.email}</span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 text-red-600 hover:text-red-700 font-black"
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 font-bold"
               >
                 <LogOut size={20} />
-                SALIR
+                Salir
               </button>
             </div>
           </div>
@@ -650,6 +386,12 @@ function DashboardContent() {
             {history.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-black mb-4 font-medium">No tienes historial de remesas aún</p>
+                <Link
+                  href="/#calculadora"
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg inline-block hover:bg-blue-700 transition font-bold"
+                >
+                  Calcular mi primera remesa
+                </Link>
               </div>
             ) : (
               <div className="overflow-x-auto">

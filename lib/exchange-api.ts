@@ -288,42 +288,42 @@ export async function forceRefreshRates(): Promise<AllRates> {
 
 /**
  * Fallback rates when APIs are unavailable (weekends, holidays, downtimes)
- * These are typical market rates updated manually
+ * Updated: January 2025 - Real market rates
  */
 function getFallbackRates(): AllRates {
   console.warn('⚠️ Using fallback rates - APIs unavailable (likely weekend/holiday)');
 
   return {
     venezuela: {
-      bcv: 36.50,        // BCV oficial (estimado)
-      paralelo: 38.50,   // Paralelo market (estimado)
-      binanceP2P: 38.20, // Binance P2P (estimado)
+      bcv: 195.00,       // BCV oficial (actualizado 2025)
+      paralelo: 294.00,   // Paralelo market (actualizado 2025)
+      binanceP2P: 270.00, // Binance P2P (actualizado 2025)
     },
     euro: 1.08,
     countries: {
       // América del Sur
-      VES: 38.50,   // Venezuela (paralelo)
-      ARS: 850.00,  // Argentina
-      BOB: 6.91,    // Bolivia
-      BRL: 5.10,    // Brasil
-      CLP: 950.00,  // Chile
-      COP: 4200.00, // Colombia
-      PEN: 3.75,    // Perú
-      UYU: 39.50,   // Uruguay
-      PYG: 7300.00, // Paraguay
+      VES: 294.00,   // Venezuela (paralelo - ACTUALIZADO 2025)
+      ARS: 1450.00,  // Argentina
+      BOB: 6.91,     // Bolivia
+      BRL: 5.38,     // Brasil
+      CLP: 950.00,   // Chile
+      COP: 3900.00,  // Colombia
+      PEN: 3.44,     // Perú
+      UYU: 40.00,    // Uruguay
+      PYG: 7046.00,  // Paraguay
 
       // América Central
-      MXN: 17.50,   // México
-      GTQ: 7.75,    // Guatemala
-      HNL: 24.70,   // Honduras
-      NIO: 36.80,   // Nicaragua
-      CRC: 520.00,  // Costa Rica
-      PAB: 1.00,    // Panamá
+      MXN: 18.50,    // México
+      GTQ: 7.67,     // Guatemala
+      HNL: 26.27,    // Honduras
+      NIO: 36.84,    // Nicaragua
+      CRC: 503.00,   // Costa Rica
+      PAB: 1.00,     // Panamá
 
       // Caribe
-      DOP: 58.50,   // República Dominicana
-      CUP: 24.00,   // Cuba
-      HTG: 132.00,  // Haití
+      DOP: 63.00,    // República Dominicana
+      CUP: 24.00,    // Cuba
+      HTG: 130.00,   // Haití
 
       // Otras
       USD: 1.0,
