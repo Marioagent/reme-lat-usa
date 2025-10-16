@@ -98,4 +98,57 @@ export const db = {
       .eq("id", alertId);
     return { data, error };
   },
+
+  // User subscriptions
+  getUserSubscription: async (userId: string) => {
+    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+    return { data, error };
+  },
+
+  createSubscription: async (subscription: {
+    user_id: string;
+    status: string;
+    plan: string;
+    expires_at: string;
+  }) => {
+    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .insert([subscription])
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  updateSubscription: async (userId: string, updates: {
+    status?: string;
+    plan?: string;
+    expires_at?: string;
+    payment_id?: string;
+  }) => {
+    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .update(updates)
+      .eq("user_id", userId)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  cancelSubscription: async (userId: string) => {
+    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .select()
+      .single();
+    return { data, error };
+  },
 };

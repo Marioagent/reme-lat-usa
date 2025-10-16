@@ -1,38 +1,19 @@
-import dynamic from 'next/dynamic';
-import Navigation from "@/components/Navigation";
-import HeroNew from "@/components/HeroNew";
+"use client";
 
-// Lazy load components for better performance
-const LiveRates = dynamic(() => import("@/components/LiveRates"), {
-  loading: () => <div className="h-96 animate-pulse bg-gray-100 rounded-xl"></div>,
-});
-
-const CalculatorNew = dynamic(() => import("@/components/CalculatorNew"), {
-  loading: () => <div className="h-96 animate-pulse bg-gray-100 rounded-xl"></div>,
-});
-
-const ComparatorNew = dynamic(() => import("@/components/ComparatorNew"), {
-  loading: () => <div className="h-96 animate-pulse bg-gray-100 rounded-xl"></div>,
-});
-
-const Features = dynamic(() => import("@/components/Features"), {
-  loading: () => <div className="h-64 animate-pulse bg-gray-100 rounded-xl"></div>,
-});
-
-const Footer = dynamic(() => import("@/components/Footer"));
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirigir automáticamente al dashboard
+    router.push("/dashboard");
+  }, [router]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <Navigation />
-      <HeroNew />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <LiveRates />
-      </div>
-      <CalculatorNew />
-      <ComparatorNew />
-      <Features />
-      <Footer />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+      <div className="text-black text-2xl font-bold">Redirigiendo...</div>
     </div>
   );
 }
