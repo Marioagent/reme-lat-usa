@@ -273,6 +273,38 @@ function DashboardContent() {
             </p>
           </div>
 
+          {/* ACCESO DIRECTO FUNDADOR */}
+          <div className="mb-6">
+            <button
+              onClick={() => {
+                setUser({
+                  id: 'founder-demo',
+                  email: 'mac.global.apps@gmail.com',
+                  role: 'founder'
+                });
+                setSuccess("¡Acceso fundador activado!");
+              }}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 text-lg rounded-xl font-black hover:shadow-2xl transition flex items-center justify-center gap-2"
+            >
+              <Crown size={24} />
+              ACCESO FUNDADOR
+            </button>
+            <p className="text-center text-sm text-gray-600 mt-2 font-medium">
+              Click aquí para acceso directo sin autenticación
+            </p>
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t-2 border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-gradient-to-br from-blue-50 via-white to-green-50 text-gray-600 font-bold">
+                O usa autenticación
+              </span>
+            </div>
+          </div>
+
           <div className="bg-white rounded-2xl shadow-2xl p-8 border-4 border-gray-300">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Input */}
