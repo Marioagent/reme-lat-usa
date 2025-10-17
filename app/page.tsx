@@ -6,6 +6,13 @@ import { motion } from "framer-motion";
 import { Calculator, TrendingUp, Bell, Shield, Zap, Globe } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants";
 
+// Tasas de cambio aproximadas para la calculadora (demo)
+const EXCHANGE_RATES: Record<string, number> = {
+  MX: 17.5, GT: 7.8, HN: 24.5, SV: 1, NI: 36.5, CR: 520, PA: 1,
+  CO: 4200, VE: 53, EC: 1, PE: 3.7, BO: 6.9, CL: 950, AR: 1050,
+  UY: 39, PY: 7300, BR: 5.2, DO: 58, CU: 25, PR: 1, HT: 150
+};
+
 export default function Home() {
   const [amount, setAmount] = useState(100);
   const [fromCountry, setFromCountry] = useState("US");
@@ -13,6 +20,7 @@ export default function Home() {
 
   const activeCountries = COUNTRIES.filter(c => c.active);
   const selectedCountry = COUNTRIES.find(c => c.code === toCountry);
+  const exchangeRate = selectedCountry ? (EXCHANGE_RATES[selectedCountry.code] || 1) : 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -119,10 +127,10 @@ export default function Home() {
               >
                 <p className="text-lg font-bold text-black mb-2">Recibirán aproximadamente:</p>
                 <p className="text-4xl font-black text-green-600">
-                  {selectedCountry.flag} {(amount * selectedCountry.rate).toLocaleString()} {selectedCountry.currency}
+                  {selectedCountry.flag} {(amount * exchangeRate).toLocaleString()} {selectedCountry.currency}
                 </p>
                 <p className="text-sm text-gray-600 mt-2 font-medium">
-                  Tasa estimada: 1 USD = {selectedCountry.rate} {selectedCountry.currency}
+                  Tasa estimada: 1 USD = {exchangeRate} {selectedCountry.currency}
                 </p>
               </motion.div>
             )}
