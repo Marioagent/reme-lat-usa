@@ -1,26 +1,68 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calculator, TrendingUp, Bell, Shield, Zap, Globe } from "lucide-react";
+import { Calculator, TrendingUp, Bell, Shield, Zap, Globe, RefreshCw } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants";
-
-// Tasas de cambio aproximadas para la calculadora (demo)
-const EXCHANGE_RATES: Record<string, number> = {
-  MX: 17.5, GT: 7.8, HN: 24.5, SV: 1, NI: 36.5, CR: 520, PA: 1,
-  CO: 4200, VE: 53, EC: 1, PE: 3.7, BO: 6.9, CL: 950, AR: 1050,
-  UY: 39, PY: 7300, BR: 5.2, DO: 58, CU: 25, PR: 1, HT: 150
-};
 
 export default function Home() {
   const [amount, setAmount] = useState(100);
   const [fromCountry, setFromCountry] = useState("US");
   const [toCountry, setToCountry] = useState("VE");
+  const [rates, setRates] = useState<Record<string, number>>({});
+  const [venezuelaRates, setVenezuelaRates] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+
+  // Cargar tasas en tiempo real
+  useEffect(() => {
+    fetchRealTimeRates();
+    // Actualizar cada minuto
+    const interval = setInterval(fetchRealTimeRates, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchRealTimeRates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/rates');
+      const data = await response.json();
+
+      if (data.success) {
+        setRates(data.data.standard);
+        setVenezuelaRates(data.data.venezuela);
+        setLastUpdate(new Date(data.data.lastUpdate).toLocaleTimeString('es-ES'));
+      }
+    } catch (error) {
+      console.error('Error fetching rates:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const activeCountries = COUNTRIES.filter(c => c.active);
   const selectedCountry = COUNTRIES.find(c => c.code === toCountry);
-  const exchangeRate = selectedCountry ? (EXCHANGE_RATES[selectedCountry.code] || 1) : 1;
+
+  // Usar tasa real de la API
+  const getExchangeRate = () => {
+    if (!selectedCountry) return 1;
+
+    // Para Venezuela, usar la mejor tasa disponible
+    if (toCountry === 'VE' && venezuelaRates) {
+      return Math.max(venezuelaRates.paralelo, venezuelaRates.binance, venezuelaRates.bcv);
+    }
+
+    // Para EUR
+    if (selectedCountry.currency === 'EUR') {
+      return rates['EUR'] || 0.92;
+    }
+
+    // Para otras monedas
+    return rates[selectedCountry.currency] || 1;
+  };
+
+  const exchangeRate = getExchangeRate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -54,9 +96,23 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-black mb-4">
             Compara Remesas en Tiempo Real
           </h1>
-          <p className="text-xl text-gray-700 mb-8">
-            25+ proveedores | 23 países LAT | Mejor tasa garantizada
+          <p className="text-xl text-gray-700 mb-4">
+            25+ proveedores | 24 países + EURO | Mejor tasa garantizada
           </p>
+          {lastUpdate && (
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+              <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
+              <span>Última actualización: {lastUpdate}</span>
+              <button
+                onClick={fetchRealTimeRates}
+                disabled={loading}
+                className="ml-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                title="Actualizar tasas"
+              >
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* Calculator */}
@@ -127,11 +183,32 @@ export default function Home() {
               >
                 <p className="text-lg font-bold text-black mb-2">Recibirán aproximadamente:</p>
                 <p className="text-4xl font-black text-green-600">
-                  {selectedCountry.flag} {(amount * exchangeRate).toLocaleString()} {selectedCountry.currency}
+                  {selectedCountry.flag} {(amount * exchangeRate).toLocaleString('es-ES', { maximumFractionDigits: 2 })} {selectedCountry.currency}
                 </p>
                 <p className="text-sm text-gray-600 mt-2 font-medium">
-                  Tasa estimada: 1 USD = {exchangeRate} {selectedCountry.currency}
+                  Tasa en tiempo real: 1 USD = {exchangeRate.toFixed(2)} {selectedCountry.currency}
                 </p>
+
+                {/* Venezuela: mostrar todas las tasas */}
+                {toCountry === 'VE' && venezuelaRates && (
+                  <div className="mt-4 pt-4 border-t-2 border-gray-300">
+                    <p className="text-xs font-bold text-black mb-2">Tasas Venezuela:</p>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="bg-white p-2 rounded">
+                        <p className="font-bold text-gray-700">BCV Oficial</p>
+                        <p className="text-green-600 font-bold">{venezuelaRates.bcv.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded">
+                        <p className="font-bold text-gray-700">Paralelo</p>
+                        <p className="text-green-600 font-bold">{venezuelaRates.paralelo.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded">
+                        <p className="font-bold text-gray-700">Binance P2P</p>
+                        <p className="text-green-600 font-bold">{venezuelaRates.binance.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
