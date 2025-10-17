@@ -1,17 +1,23 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY");
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create supabase client only if credentials are provided
+// If not configured, auth features will show friendly error messages
+export const supabase = supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('placeholder')
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 // Auth helpers
 export const auth = {
   signUp: async (email: string, password: string) => {
+    if (!supabase) {
+      return {
+        data: null,
+        error: new Error("Supabase no está configurado. Por favor, contacta al administrador para habilitar el registro.")
+      };
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -23,6 +29,12 @@ export const auth = {
   },
 
   signIn: async (email: string, password: string) => {
+    if (!supabase) {
+      return {
+        data: null,
+        error: new Error("Supabase no está configurado. Por favor, contacta al administrador para habilitar el inicio de sesión.")
+      };
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -31,11 +43,13 @@ export const auth = {
   },
 
   signOut: async () => {
+    if (!supabase) return { error: null };
     const { error } = await supabase.auth.signOut();
     return { error };
   },
 
   getUser: async () => {
+    if (!supabase) return null;
     const { data: { user } } = await supabase.auth.getUser();
     return user;
   },
@@ -45,6 +59,7 @@ export const auth = {
 export const db = {
   // Remittance history
   getRemittanceHistory: async (userId: string) => {
+    if (!supabase) return { data: [], error: null };
     const { data, error } = await supabase
       .from("remittance_history")
       .select("*")
@@ -54,6 +69,7 @@ export const db = {
   },
 
   addRemittanceHistory: async (remittance: any) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("remittance_history")
       .insert([remittance]);
@@ -62,6 +78,7 @@ export const db = {
 
   // Rate alerts
   getRateAlerts: async (userId: string) => {
+    if (!supabase) return { data: [], error: null };
     const { data, error } = await supabase
       .from("rate_alerts")
       .select("*")
@@ -71,6 +88,7 @@ export const db = {
   },
 
   addRateAlert: async (alert: any) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("rate_alerts")
       .insert([alert]);
@@ -78,6 +96,7 @@ export const db = {
   },
 
   deleteRateAlert: async (alertId: string) => {
+    if (!supabase) return { error: null };
     const { error } = await supabase
       .from("rate_alerts")
       .delete()
@@ -86,6 +105,7 @@ export const db = {
   },
 
   updateRateAlert: async (alertId: string, updates: any) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("rate_alerts")
       .update(updates)
@@ -95,6 +115,7 @@ export const db = {
 
   // User subscriptions
   getUserSubscription: async (userId: string) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("user_subscriptions")
       .select("*")
@@ -109,6 +130,7 @@ export const db = {
     plan: string;
     expires_at: string;
   }) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("user_subscriptions")
       .insert([subscription])
@@ -123,6 +145,7 @@ export const db = {
     expires_at?: string;
     payment_id?: string;
   }) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("user_subscriptions")
       .update(updates)
@@ -133,6 +156,7 @@ export const db = {
   },
 
   cancelSubscription: async (userId: string) => {
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("user_subscriptions")
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
