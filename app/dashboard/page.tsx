@@ -57,7 +57,9 @@ export default function DashboardPage() {
   const checkUser = async () => {
     const currentUser = await auth.getUser();
     if (!currentUser) {
-      router.push("/auth");
+      // Modo sin autenticación - usar datos locales
+      setUser({ id: 'guest', email: 'Modo invitado (sin login)' });
+      setLoading(false);
       return;
     }
     setUser(currentUser);
