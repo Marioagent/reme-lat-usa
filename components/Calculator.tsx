@@ -54,7 +54,7 @@ export default function Calculator() {
 
     let rate = 0;
 
-    // For Venezuela, use specific rates (bcv, paralelo, binance)
+    // Para Venezuela, usar tasas específicas (bcv, paralelo, binance)
     if (country === 'VE') {
       if (rateType === 'bcv') {
         rate = realRates.venezuela.bcv;
@@ -64,16 +64,23 @@ export default function Calculator() {
         rate = realRates.venezuela.binanceP2P;
       }
     } else {
-      // For other countries, use the country rate from API
+      // Para otros países, usar la tasa del API según la moneda
       const selectedCountry = COUNTRIES.find(c => c.code === country);
       if (selectedCountry) {
         rate = realRates.countries[selectedCountry.currency] || 0;
       }
     }
 
+    // Si la tasa es 0, mostrar error
+    if (rate === 0) {
+      setError(`No se pudo obtener la tasa para ${selectedCountry?.name}. Intenta refrescar.`);
+      return;
+    }
+
     const calculated = amount * rate;
     setResult(calculated);
     setShowResult(true);
+    setError(null); // Limpiar errores previos
   };
 
   const selectedCountry = COUNTRIES.find(c => c.code === country);
@@ -166,20 +173,23 @@ export default function Calculator() {
               />
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Tasa
-              </label>
-              <select
-                value={rateType}
-                onChange={(e) => setRateType(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="paralelo">💵 Paralelo (Mejor)</option>
-                <option value="binance">₿ Binance P2P</option>
-                <option value="bcv">🏛️ BCV Oficial</option>
-              </select>
-            </div>
+            {/* Tipo de Tasa - Solo para Venezuela */}
+            {country === 'VE' && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de Tasa (Venezuela)
+                </label>
+                <select
+                  value={rateType}
+                  onChange={(e) => setRateType(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="paralelo">💵 Paralelo (Mejor)</option>
+                  <option value="binance">₿ Binance P2P</option>
+                  <option value="bcv">🏛️ BCV Oficial</option>
+                </select>
+              </div>
+            )}
 
             <button
               onClick={handleCalculate}
