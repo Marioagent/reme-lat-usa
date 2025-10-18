@@ -7,6 +7,9 @@ export const COUNTRIES: Country[] = [
   // USA
   { code: "US", name: "Estados Unidos", currency: "USD", flag: "🇺🇸", active: true, region: 'north-america', currencySymbol: '$' },
 
+  // Europa
+  { code: "EU", name: "Eurozona", currency: "EUR", flag: "🇪🇺", active: true, region: 'europe', currencySymbol: '€' },
+
   // América Central
   { code: "MX", name: "México", currency: "MXN", flag: "🇲🇽", active: true, region: 'central-america', currencySymbol: '$' },
   { code: "GT", name: "Guatemala", currency: "GTQ", flag: "🇬🇹", active: true, region: 'central-america', currencySymbol: 'Q' },

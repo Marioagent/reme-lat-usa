@@ -1,60 +1,53 @@
 import { NextResponse } from 'next/server';
-import { getVenezuelaRatesValidated } from '@/lib/bcv-api';
+import { getVenezuelaRates, getBestVenezuelaRate } from '@/lib/exchange-rates';
 
-// API Route: /api/rates/venezuela
-// Returns Venezuela-specific rates with official sources and validation
-
-export const runtime = 'edge';
-export const revalidate = 120;
-
+// API específica para tasas de Venezuela (BCV, Paralelo, Binance)
 export async function GET() {
   try {
-    // Fetch Venezuela rates with validation
-    const rates = await getVenezuelaRatesValidated();
+    const [rates, best] = await Promise.all([
+      getVenezuelaRates(),
+      getBestVenezuelaRate()
+    ]);
 
     return NextResponse.json({
       success: true,
       data: {
         bcv: {
-          rate: rates.bcv.rate,
-          name: 'BCV Oficial',
-          source: rates.bcv.source,
-          confidence: rates.bcv.confidence,
+          rate: rates.bcv,
+          source: 'Banco Central de Venezuela',
+          official: true
         },
         paralelo: {
-          rate: rates.paralelo.rate,
-          name: 'Paralelo',
-          source: rates.paralelo.source,
-          confidence: rates.paralelo.confidence,
+          rate: rates.paralelo,
+          source: 'DolarToday / Monitor Dólar',
+          official: false
         },
-        binanceP2P: {
-          rate: rates.binanceP2P.rate,
-          name: 'Binance P2P',
-          source: rates.binanceP2P.source,
-          confidence: rates.binanceP2P.confidence,
+        binance: {
+          rate: rates.binance,
+          source: 'Binance P2P',
+          official: false
         },
-        validation: {
-          bcvParaleloDiff: rates.validation.bcvParaleloDiff,
-          binanceParaleloDiff: rates.validation.binanceParaleloDiff,
-          alert: rates.validation.alert,
+        best: {
+          rate: best.rate,
+          source: best.source,
+          recommended: true
         },
-        timestamp: Date.now(),
-        currency: 'VES',
-      },
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=60',
-      },
+        timestamp: rates.timestamp,
+        lastUpdate: new Date().toISOString()
+      }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching Venezuela rates:', error);
 
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch Venezuela rates',
-      message: error.message,
-    }, {
-      status: 500,
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch Venezuela rates'
+      },
+      { status: 500 }
+    );
   }
 }
+
+export const runtime = 'edge';
+export const revalidate = 60;

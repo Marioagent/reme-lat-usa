@@ -4,23 +4,37 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 // Create supabase client only if credentials are provided
-export const supabase = supabaseUrl && supabaseAnonKey
+// If not configured, auth features will show friendly error messages
+export const supabase = supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('placeholder')
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
 // Auth helpers
 export const auth = {
   signUp: async (email: string, password: string) => {
-    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    if (!supabase) {
+      return {
+        data: null,
+        error: new Error("Supabase no está configurado. Por favor, contacta al administrador para habilitar el registro.")
+      };
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      }
     });
     return { data, error };
   },
 
   signIn: async (email: string, password: string) => {
-    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    if (!supabase) {
+      return {
+        data: null,
+        error: new Error("Supabase no está configurado. Por favor, contacta al administrador para habilitar el inicio de sesión.")
+      };
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -29,7 +43,7 @@ export const auth = {
   },
 
   signOut: async () => {
-    if (!supabase) return { error: new Error("Supabase not configured") };
+    if (!supabase) return { error: null };
     const { error } = await supabase.auth.signOut();
     return { error };
   },
@@ -45,7 +59,7 @@ export const auth = {
 export const db = {
   // Remittance history
   getRemittanceHistory: async (userId: string) => {
-    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    if (!supabase) return { data: [], error: null };
     const { data, error } = await supabase
       .from("remittance_history")
       .select("*")
@@ -55,7 +69,7 @@ export const db = {
   },
 
   addRemittanceHistory: async (remittance: any) => {
-    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("remittance_history")
       .insert([remittance]);
@@ -64,7 +78,7 @@ export const db = {
 
   // Rate alerts
   getRateAlerts: async (userId: string) => {
-    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    if (!supabase) return { data: [], error: null };
     const { data, error } = await supabase
       .from("rate_alerts")
       .select("*")
@@ -74,7 +88,7 @@ export const db = {
   },
 
   addRateAlert: async (alert: any) => {
-    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("rate_alerts")
       .insert([alert]);
@@ -82,7 +96,7 @@ export const db = {
   },
 
   deleteRateAlert: async (alertId: string) => {
-    if (!supabase) return { error: new Error("Supabase not configured") };
+    if (!supabase) return { error: null };
     const { error } = await supabase
       .from("rate_alerts")
       .delete()
@@ -91,11 +105,64 @@ export const db = {
   },
 
   updateRateAlert: async (alertId: string, updates: any) => {
-    if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+    if (!supabase) return { data: null, error: null };
     const { data, error } = await supabase
       .from("rate_alerts")
       .update(updates)
       .eq("id", alertId);
+    return { data, error };
+  },
+
+  // User subscriptions
+  getUserSubscription: async (userId: string) => {
+    if (!supabase) return { data: null, error: null };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+    return { data, error };
+  },
+
+  createSubscription: async (subscription: {
+    user_id: string;
+    status: string;
+    plan: string;
+    expires_at: string;
+  }) => {
+    if (!supabase) return { data: null, error: null };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .insert([subscription])
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  updateSubscription: async (userId: string, updates: {
+    status?: string;
+    plan?: string;
+    expires_at?: string;
+    payment_id?: string;
+  }) => {
+    if (!supabase) return { data: null, error: null };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .update(updates)
+      .eq("user_id", userId)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  cancelSubscription: async (userId: string) => {
+    if (!supabase) return { data: null, error: null };
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .select()
+      .single();
     return { data, error };
   },
 };

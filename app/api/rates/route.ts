@@ -1,42 +1,33 @@
 import { NextResponse } from 'next/server';
-import { getCachedRates, forceRefreshRates } from '@/lib/exchange-api';
+import { getAllRates } from '@/lib/exchange-rates';
 
-// API Route: /api/rates
-// Returns real-time exchange rates from all sources
-
-export const runtime = 'edge'; // Use edge runtime for faster responses
-export const revalidate = 120; // Revalidate every 2 minutes
-
-export async function GET(request: Request) {
+// API Route para obtener TODAS las tasas en tiempo real
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const forceRefresh = searchParams.get('refresh') === 'true';
-
-    // Get rates (cached or fresh)
-    const rates = forceRefresh
-      ? await forceRefreshRates()
-      : await getCachedRates();
+    const { standard, venezuela } = await getAllRates();
 
     return NextResponse.json({
       success: true,
-      data: rates,
-      cached: !forceRefresh,
-      message: 'Real-time rates fetched successfully',
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=60',
-      },
+      data: {
+        standard,
+        venezuela,
+        timestamp: Date.now(),
+        lastUpdate: new Date().toISOString()
+      }
     });
-  } catch (error: any) {
-    console.error('Error in /api/rates:', error);
+  } catch (error) {
+    console.error('Error fetching rates:', error);
 
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch real-time rates',
-      message: error.message,
-      timestamp: Date.now(),
-    }, {
-      status: 500,
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch exchange rates'
+      },
+      { status: 500 }
+    );
   }
 }
+
+// Cache para Edge Runtime
+export const runtime = 'edge';
+export const revalidate = 60; // Revalidar cada 60 segundos
